@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Informasi Akademik Universitas (SIAKAD)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains+Mono', monospace; }
+
+    /* CSS Khusus Cetak / Print Dokumen Resmi */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+      }
+      header, nav, footer, .no-print, button, #review-modal, #krs-alert, .sticky {
+        display: none !important;
+      }
+      main {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .print-kop {
+        display: flex !important;
+      }
+      .print-signature {
+        display: grid !important;
+      }
+      .print-border-black {
+        border-color: #000000 !important;
+      }
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+      }
+      th, td {
+        border: 1px solid #000000 !important;
+        padding: 6px 8px !important;
+      }
+      thead {
+        background-color: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .bg-white, .bg-slate-50, .shadow-sm {
+        box-shadow: none !important;
+        border-color: #000000 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded bg-slate-900 text-white flex items-center justify-center font-bold text-sm">
+          U
+        </div>
+        <div>
+          <span class="font-bold text-sm sm:text-base tracking-tight block">SIAKAD UNIVERSITAS</span>
+          <span class="text-[11px] text-slate-500 block">Sistem Informasi Akademik Terpadu</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Role Switcher Simulator -->
+        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-md border border-slate-200">
+          <span class="text-[11px] font-semibold text-slate-500 pl-1.5 hidden sm:inline">Role:</span>
+          <select id="role-selector" onchange="switchRole(this.value)" class="text-xs font-semibold bg-white border border-slate-300 rounded px-2 py-1 cursor-pointer">
+            <option value="MAHASISWA">Mahasiswa (Rian Hidayat)</option>
+            <option value="DOSEN">Dosen (Dr. Eng. Irwan Prasetyo)</option>
+            <option value="BAAK">Admin Akademik / BAAK (Biro Pusat)</option>
+            <option value="KAPRODI">Kaprodi TI (Prof. Hendra Wijaya)</option>
+          </select>
+        </div>
+
+        <div class="hidden sm:flex flex-col text-right">
+          <span id="header-user-name" class="text-xs font-semibold">Rian Hidayat</span>
+          <span id="header-user-id" class="text-[11px] text-slate-500 font-mono">2112012014 | S1 TI</span>
+        </div>
+        <div id="header-user-avatar" class="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-700">
+          RH
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Module Switcher Tabs -->
+  <nav class="bg-white border-b border-slate-200 sticky top-16 z-20">
+    <div id="nav-container" class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto gap-2 py-2 text-xs sm:text-sm">
+      <!-- Mahasiswa Nav Items -->
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" data-role="MAHASISWA" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-900 bg-slate-100 flex items-center gap-1.5 whitespace-nowrap">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+      </button>
+      <button onclick="switchTab('krs')" id="nav-krs" data-role="MAHASISWA" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap">
+        <i data-lucide="clipboard-pen" class="w-4 h-4"></i> Pengisian KRS
+      </button>
+      <button onclick="switchTab('presensi-mhs')" id="nav-presensi-mhs" data-role="MAHASISWA" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap">
+        <i data-lucide="scan-line" class="w-4 h-4"></i> Presensi Kelas
+      </button>
+      <button onclick="switchTab('khs')" id="nav-khs" data-role="MAHASISWA" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap">
+        <i data-lucide="graduation-cap" class="w-4 h-4"></i> Hasil Studi (KHS)
+      </button>
+      <button onclick="switchTab('jadwal')" id="nav-jadwal" data-role="MAHASISWA" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap">
+        <i data-lucide="calendar" class="w-4 h-4"></i> Jadwal Kuliah
+      </button>
+      <button onclick="switchTab('transkrip')" id="nav-transkrip" data-role="MAHASISWA" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap">
+        <i data-lucide="file-text" class="w-4 h-4"></i> Transkrip Nilai
+      </button>
+      <button onclick="switchTab('keuangan-mhs')" id="nav-keuangan-mhs" data-role="MAHASISWA" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap">
+        <i data-lucide="credit-card" class="w-4 h-4"></i> Tagihan UKT
+      </button>
+      <button onclick="switchTab('tugas-akhir-mhs')" id="nav-tugas-akhir-mhs" data-role="MAHASISWA" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap">
+        <i data-lucide="book-check" class="w-4 h-4"></i> Portal Skripsi (TA)
+      </button>
+
+      <!-- Dosen Nav Items -->
+      <button onclick="switchTab('dashboard-dosen')" id="nav-dashboard-dosen" data-role="DOSEN" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard Dosen
+      </button>
+      <button onclick="switchTab('presensi-dosen')" id="nav-presensi-dosen" data-role="DOSEN" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="qr-code" class="w-4 h-4"></i> Presensi Perkuliahan
+      </button>
+      <button onclick="switchTab('dosen')" id="nav-dosen" data-role="DOSEN" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="user-check" class="w-4 h-4"></i> Persetujuan KRS
+      </button>
+      <button onclick="switchTab('input-nilai')" id="nav-input-nilai" data-role="DOSEN" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="pen-tool" class="w-4 h-4"></i> Input Nilai
+      </button>
+      <button onclick="switchTab('bimbingan-ta')" id="nav-bimbingan-ta" data-role="DOSEN" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="book-open" class="w-4 h-4"></i> Bimbingan Skripsi (TA)
+      </button>
+
+      <!-- BAAK (Admin Akademik) Nav Items -->
+      <button onclick="switchTab('baak-dashboard')" id="nav-baak-dashboard" data-role="BAAK" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="gauge" class="w-4 h-4"></i> Dashboard BAAK
+      </button>
+      <button onclick="switchTab('baak-kalender')" id="nav-baak-kalender" data-role="BAAK" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="calendar-cog" class="w-4 h-4"></i> Kalender & Periode KRS
+      </button>
+      <button onclick="switchTab('baak-ruang')" id="nav-baak-ruang" data-role="BAAK" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="building-2" class="w-4 h-4"></i> Plotting Kelas & Ruang
+      </button>
+
+      <!-- Kaprodi Nav Items -->
+      <button onclick="switchTab('kaprodi-dashboard')" id="nav-kaprodi-dashboard" data-role="KAPRODI" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="line-chart" class="w-4 h-4"></i> Mutu & Evaluasi DO
+      </button>
+      <button onclick="switchTab('kaprodi-plotting')" id="nav-kaprodi-plotting" data-role="KAPRODI" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="users-2" class="w-4 h-4"></i> Penugasan Pembimbing TA
+      </button>
+      <button onclick="switchTab('kaprodi-mbkm')" id="nav-kaprodi-mbkm" data-role="KAPRODI" class="tab-btn px-3 py-2 rounded-md font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap hidden">
+        <i data-lucide="award" class="w-4 h-4"></i> Konversi Nilai MBKM
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
+
+    <!-- 1. DASHBOARD TAB -->
+    <section id="view-dashboard" class="space-y-6">
+      <div class="bg-white border border-slate-200 rounded-lg p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold">Rian Hidayat</h1>
+            <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-2 py-0.5 rounded">Aktif</span>
+          </div>
+          <p class="text-xs text-slate-500 font-mono">NIM: 2112012014 &bull; Program Studi: S1 Teknik Informatika (Fakultas Teknik)</p>
+          <p class="text-xs text-slate-600">Dosen Pembimbing Akademik: <span class="font-semibold">Dr. Eng. Irwan Prasetyo, M.T.</span></p>
+        </div>
+        <button onclick="switchTab('krs')" class="w-full md:w-auto px-4 py-2.5 bg-slate-900 text-white rounded-md text-xs font-semibold hover:bg-slate-800 transition flex items-center justify-center gap-1.5 min-h-[44px]">
+          Isi / Periksa KRS <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Metric Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">IPK Kumulatif</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">3.75</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">IPS Semester Lalu</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">3.81</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">SKS Lulus</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">84</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">SKS Tempuh Semester Ini</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">15</span>
+        </div>
+      </div>
+
+      <!-- Banner Status KRS -->
+      <div id="mhs-krs-status-box" class="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+        <i id="mhs-krs-icon" data-lucide="clock" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+        <div class="flex-1 flex flex-col md:flex-row justify-between md:items-center gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm font-semibold text-amber-900">Status KRS: Semester Ganjil 2024/2025</h2>
+              <span id="mhs-krs-badge" class="bg-amber-200/80 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">Menunggu Persetujuan</span>
+            </div>
+            <p id="mhs-krs-desc" class="text-xs text-amber-700 mt-0.5">Menunggu review dan tanda tangan digital oleh Dosen Pembimbing Akademik.</p>
+          </div>
+          <span id="mhs-krs-sks-tag" class="text-xs font-mono font-bold text-amber-900 bg-amber-100 px-2.5 py-1 rounded border border-amber-300 shrink-0">12 SKS Diajukan</span>
+        </div>
+      </div>
+
+      <!-- Two-column: Jadwal Hari ini & Pengumuman -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Jadwal Hari Ini -->
+        <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b pb-2">
+            <h3 class="text-sm font-bold flex items-center gap-2">
+              <i data-lucide="calendar-check" class="w-4 h-4 text-slate-600"></i> Kuliah Hari Ini (Senin)
+            </h3>
+            <span class="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">2 Kelas</span>
+          </div>
+          <div class="space-y-2">
+            <div class="border border-slate-100 bg-slate-50/50 p-3 rounded-md space-y-1.5 text-xs">
+              <div class="flex justify-between items-start font-medium">
+                <span class="text-slate-900 font-semibold">Struktur Data & Algoritma</span>
+                <span class="font-mono text-slate-500">IF2101</span>
+              </div>
+              <div class="flex items-center gap-4 text-slate-600">
+                <span class="flex items-center gap-1 font-mono"><i data-lucide="clock" class="w-3.5 h-3.5"></i> 08:00 - 11:20 WIB</span>
+                <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> TI-301</span>
+              </div>
+            </div>
+            <div class="border border-slate-100 bg-slate-50/50 p-3 rounded-md space-y-1.5 text-xs">
+              <div class="flex justify-between items-start font-medium">
+                <span class="text-slate-900 font-semibold">Pemrograman Web Komponen</span>
+                <span class="font-mono text-slate-500">IF2103</span>
+              </div>
+              <div class="flex items-center gap-4 text-slate-600">
+                <span class="flex items-center gap-1 font-mono"><i data-lucide="clock" class="w-3.5 h-3.5"></i> 13:00 - 15:30 WIB</span>
+                <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> LAB-RPL</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pengumuman Akademik -->
+        <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b pb-2">
+            <h3 class="text-sm font-bold flex items-center gap-2">
+              <i data-lucide="bell" class="w-4 h-4 text-slate-600"></i> Pengumuman Akademik
+            </h3>
+          </div>
+          <div class="space-y-2">
+            <div class="border border-slate-100 bg-slate-50/50 p-3 rounded-md space-y-1 text-xs">
+              <div class="flex justify-between items-start gap-2">
+                <h4 class="font-semibold text-slate-900 leading-snug">Jadwal Pelaksanaan Ujian Tengah Semester (UTS) Ganjil</h4>
+                <span class="bg-rose-50 text-rose-700 border border-rose-200 text-[10px] px-1.5 py-0.2 rounded font-semibold shrink-0">Penting</span>
+              </div>
+              <div class="flex justify-between text-slate-500 text-[11px] font-mono pt-1">
+                <span>Akademik</span>
+                <span>24 Okt 2024</span>
+              </div>
+            </div>
+            <div class="border border-slate-100 bg-slate-50/50 p-3 rounded-md space-y-1 text-xs">
+              <div class="flex justify-between items-start gap-2">
+                <h4 class="font-semibold text-slate-900 leading-snug">Pendaftaran Beasiswa Peningkatan Prestasi Akademik Termin II</h4>
+              </div>
+              <div class="flex justify-between text-slate-500 text-[11px] font-mono pt-1">
+                <span>Beasiswa</span>
+                <span>18 Okt 2024</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. KRS TAB -->
+    <section id="view-krs" class="hidden space-y-6">
+      <!-- Kop Dokumen Resmi (Hanya muncul saat Print) -->
+      <div class="hidden print-kop flex-col items-center border-b-2 border-black pb-4 mb-4 text-center">
+        <div class="flex items-center gap-4 w-full justify-center">
+          <div class="w-16 h-16 rounded border-2 border-black flex items-center justify-center font-bold text-2xl font-mono">
+            U
+          </div>
+          <div class="space-y-0.5">
+            <h2 class="text-sm font-semibold tracking-wider uppercase">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</h2>
+            <h1 class="text-lg font-bold uppercase tracking-tight">UNIVERSITAS TEKNOLOGI NASIONAL</h1>
+            <p class="text-xs font-medium">FAKULTAS TEKNIK &bull; PROGRAM STUDI S1 TEKNIK INFORMATIKA</p>
+            <p class="text-[11px] text-slate-600">Jl. Prof. Sudarto, S.H., Kampus Terpadu, Telp: (021) 7891234, Email: info@univ.ac.id</p>
+          </div>
+        </div>
+        <div class="w-full border-t border-black mt-3 pt-2">
+          <h3 class="text-sm font-bold uppercase tracking-wide">KARTU RENCANA STUDI (KRS)</h3>
+          <p class="text-xs font-mono">SEMESTER GANJIL TAHUN AKADEMIK 2024/2025</p>
+        </div>
+      </div>
+
+      <div class="border-b pb-4 flex justify-between items-center no-print">
+        <div>
+          <h1 class="text-xl font-bold">Pengisian Kartu Rencana Studi (KRS)</h1>
+          <p class="text-xs text-slate-500">Pilih mata kuliah yang akan ditempuh pada Semester Ganjil 2024/2025.</p>
+        </div>
+        <button onclick="window.print()" class="px-3.5 py-2 border border-slate-300 rounded text-xs font-semibold hover:bg-slate-50 flex items-center gap-1.5 min-h-[44px]">
+          <i data-lucide="printer" class="w-4 h-4"></i> Cetak KRS Resmi
+        </button>
+      </div>
+
+      <!-- Info Strip -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white border border-slate-200 p-3 rounded-lg text-xs shadow-sm">
+        <div>
+          <span class="text-slate-500 block">Mahasiswa</span>
+          <span class="font-semibold">NIM: 2112012014</span>
+        </div>
+        <div>
+          <span class="text-slate-500 block">IPK Terakhir</span>
+          <span class="font-semibold">3.75</span>
+        </div>
+        <div>
+          <span class="text-slate-500 block">Batas Beban Maksimum</span>
+          <span class="font-semibold">24 SKS</span>
+        </div>
+        <div>
+          <span class="text-slate-500 block">SKS Terpilih</span>
+          <span id="krs-total-indicator" class="font-semibold font-mono text-slate-900">0 / 24 SKS</span>
+        </div>
+      </div>
+
+      <div id="krs-alert" class="hidden p-3 rounded-md text-xs font-medium"></div>
+
+      <!-- Desktop Table -->
+      <div class="hidden md:block bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 text-center w-12">Pilih</th>
+              <th class="p-3 w-24">Kode</th>
+              <th class="p-3">Mata Kuliah</th>
+              <th class="p-3 text-center w-16">Kelas</th>
+              <th class="p-3 text-center w-16">SKS</th>
+              <th class="p-3">Dosen Pengampu</th>
+              <th class="p-3">Jadwal & Ruang</th>
+              <th class="p-3 text-center w-24">Kuota</th>
+            </tr>
+          </thead>
+          <tbody id="krs-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div id="krs-mobile-cards" class="md:hidden space-y-3">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Bottom Sticky Action Bar -->
+      <div class="sticky bottom-0 bg-white/95 backdrop-blur border border-slate-200 p-3 rounded-lg shadow flex items-center justify-between">
+        <div class="text-xs">
+          Total Terpilih: <span id="krs-summary" class="font-bold font-mono">0 MK (0 SKS)</span>
+        </div>
+        <button id="btn-submit-krs" onclick="submitKrs()" class="px-5 py-2.5 bg-slate-900 text-white rounded-md text-xs font-semibold hover:bg-slate-800 disabled:opacity-50 min-h-[44px]">
+          Simpan & Ajukan KRS
+        </button>
+      </div>
+
+      <!-- Tanda Tangan Pengesahan KRS (Khusus Print) -->
+      <div class="hidden print-signature grid-cols-2 gap-8 pt-8 mt-6 text-xs text-center">
+        <div class="space-y-16">
+          <p>Mahasiswa Pemohon,</p>
+          <div>
+            <p class="font-bold underline">Rian Hidayat</p>
+            <p class="font-mono text-[11px]">NIM. 2112012014</p>
+          </div>
+        </div>
+        <div class="space-y-16">
+          <p>Semarang, 27 Oktober 2024<br>Dosen Pembimbing Akademik (DPA),</p>
+          <div>
+            <p class="font-bold underline">Dr. Eng. Irwan Prasetyo, M.T.</p>
+            <p class="font-mono text-[11px]">NIP. 197805122003121002</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. KHS TAB -->
+    <section id="view-khs" class="hidden space-y-6">
+      <!-- Kop Dokumen Resmi KHS (Hanya muncul saat Print) -->
+      <div class="hidden print-kop flex-col items-center border-b-2 border-black pb-4 mb-4 text-center">
+        <div class="flex items-center gap-4 w-full justify-center">
+          <div class="w-16 h-16 rounded border-2 border-black flex items-center justify-center font-bold text-2xl font-mono">
+            U
+          </div>
+          <div class="space-y-0.5">
+            <h2 class="text-sm font-semibold tracking-wider uppercase">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</h2>
+            <h1 class="text-lg font-bold uppercase tracking-tight">UNIVERSITAS TEKNOLOGI NASIONAL</h1>
+            <p class="text-xs font-medium">FAKULTAS TEKNIK &bull; PROGRAM STUDI S1 TEKNIK INFORMATIKA</p>
+            <p class="text-[11px] text-slate-600">Jl. Prof. Sudarto, S.H., Kampus Terpadu, Telp: (021) 7891234, Email: info@univ.ac.id</p>
+          </div>
+        </div>
+        <div class="w-full border-t border-black mt-3 pt-2">
+          <h3 class="text-sm font-bold uppercase tracking-wide">KARTU HASIL STUDI (KHS)</h3>
+          <p class="text-xs font-mono" id="print-khs-semester">SEMESTER GENAP TAHUN AKADEMIK 2023/2024</p>
+        </div>
+      </div>
+
+      <!-- Info Identitas Mahasiswa KHS (Khusus Print) -->
+      <div class="hidden print-kop grid-cols-2 gap-4 text-xs border-b border-black pb-3 mb-4">
+        <div>
+          <p><strong>NIM:</strong> 2112012014</p>
+          <p><strong>Nama:</strong> Rian Hidayat</p>
+        </div>
+        <div>
+          <p><strong>Program Studi:</strong> S1 Teknik Informatika</p>
+          <p><strong>Dosen Wali / DPA:</strong> Dr. Eng. Irwan Prasetyo, M.T.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4 no-print">
+        <div>
+          <h1 class="text-xl font-bold">Kartu Hasil Studi (KHS)</h1>
+          <p class="text-xs text-slate-500">NIM: 2112012014 &bull; S1 Teknik Informatika</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="khs-sem-select" onchange="renderKhs()" class="border border-slate-300 rounded px-3 py-2 text-xs bg-white min-h-[44px]">
+            <option value="2023-2">Genap 2023/2024 (Semester 4)</option>
+            <option value="2023-1">Ganjil 2023/2024 (Semester 3)</option>
+          </select>
+          <button onclick="window.print()" class="px-3 py-2 border border-slate-300 rounded text-xs font-medium hover:bg-slate-50 flex items-center gap-1.5 min-h-[44px]">
+            <i data-lucide="printer" class="w-4 h-4"></i> Cetak KHS
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="bg-white border border-slate-200 p-3 rounded-md shadow-sm">
+          <span class="text-[11px] text-slate-500 block">SKS Semester</span>
+          <span id="khs-sks-sem" class="text-lg font-bold font-mono">21</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-3 rounded-md shadow-sm">
+          <span class="text-[11px] text-slate-500 block">SKS Kumulatif</span>
+          <span id="khs-sks-kum" class="text-lg font-bold font-mono">84</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-3 rounded-md shadow-sm">
+          <span class="text-[11px] text-slate-500 block">IP Semester (IPS)</span>
+          <span id="khs-ips" class="text-lg font-bold font-mono text-emerald-700">3.81</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-3 rounded-md shadow-sm">
+          <span class="text-[11px] text-slate-500 block">IP Kumulatif (IPK)</span>
+          <span id="khs-ipk" class="text-lg font-bold font-mono text-emerald-700">3.75</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-3 rounded-md shadow-sm col-span-2 md:col-span-1">
+          <span class="text-[11px] text-slate-500 block">Maks SKS Depan</span>
+          <span id="khs-maks" class="text-lg font-bold font-mono">24 SKS</span>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 text-center w-12">No</th>
+              <th class="p-3 w-24">Kode MK</th>
+              <th class="p-3">Mata Kuliah</th>
+              <th class="p-3 text-center w-16">SKS</th>
+              <th class="p-3 text-center w-24">Nilai Huruf</th>
+              <th class="p-3 text-center w-20">Bobot</th>
+              <th class="p-3 text-center w-24">SKS x Bobot</th>
+            </tr>
+          </thead>
+          <tbody id="khs-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tanda Tangan Pengesahan KHS (Khusus Print) -->
+      <div class="hidden print-signature grid-cols-2 gap-8 pt-8 mt-6 text-xs text-center">
+        <div class="space-y-16">
+          <p>Mahasiswa,</p>
+          <div>
+            <p class="font-bold underline">Rian Hidayat</p>
+            <p class="font-mono text-[11px]">NIM. 2112012014</p>
+          </div>
+        </div>
+        <div class="space-y-16">
+          <p>Semarang, 27 Oktober 2024<br>Dosen Pembimbing Akademik,</p>
+          <div>
+            <p class="font-bold underline">Dr. Eng. Irwan Prasetyo, M.T.</p>
+            <p class="font-mono text-[11px]">NIP. 197805122003121002</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. JADWAL TAB -->
+    <section id="view-jadwal" class="hidden space-y-6">
+      <div class="border-b pb-4">
+        <h1 class="text-xl font-bold">Jadwal Perkuliahan Mingguan</h1>
+        <p class="text-xs text-slate-500">Semester Ganjil 2024/2025 &bull; Total 15 SKS Aktif</p>
+      </div>
+
+      <!-- Filter Days -->
+      <div class="flex overflow-x-auto gap-1 border-b border-slate-200 pb-2">
+        <button onclick="filterJadwal('Semua')" id="day-Semua" class="jadwal-tab-btn px-3 py-1.5 text-xs font-semibold rounded bg-slate-900 text-white">Semua</button>
+        <button onclick="filterJadwal('Senin')" id="day-Senin" class="jadwal-tab-btn px-3 py-1.5 text-xs font-semibold rounded text-slate-600 hover:bg-slate-100">Senin</button>
+        <button onclick="filterJadwal('Selasa')" id="day-Selasa" class="jadwal-tab-btn px-3 py-1.5 text-xs font-semibold rounded text-slate-600 hover:bg-slate-100">Selasa</button>
+        <button onclick="filterJadwal('Rabu')" id="day-Rabu" class="jadwal-tab-btn px-3 py-1.5 text-xs font-semibold rounded text-slate-600 hover:bg-slate-100">Rabu</button>
+        <button onclick="filterJadwal('Kamis')" id="day-Kamis" class="jadwal-tab-btn px-3 py-1.5 text-xs font-semibold rounded text-slate-600 hover:bg-slate-100">Kamis</button>
+        <button onclick="filterJadwal('Jumat')" id="day-Jumat" class="jadwal-tab-btn px-3 py-1.5 text-xs font-semibold rounded text-slate-600 hover:bg-slate-100">Jumat</button>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-20">Hari</th>
+              <th class="p-3 w-32">Waktu</th>
+              <th class="p-3 w-24">Kode</th>
+              <th class="p-3">Mata Kuliah</th>
+              <th class="p-3 text-center w-16">Kelas</th>
+              <th class="p-3 text-center w-16">SKS</th>
+              <th class="p-3">Ruang / Gedung</th>
+              <th class="p-3">Dosen Pengampu</th>
+            </tr>
+          </thead>
+          <tbody id="jadwal-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TRANSKRIP NILAI TAB -->
+    <section id="view-transkrip" class="hidden space-y-6">
+      <!-- Kop Dokumen Resmi Transkrip Nilai (Hanya muncul saat Print) -->
+      <div class="hidden print-kop flex-col items-center border-b-2 border-black pb-4 mb-4 text-center">
+        <div class="flex items-center gap-4 w-full justify-center">
+          <div class="w-16 h-16 rounded border-2 border-black flex items-center justify-center font-bold text-2xl font-mono">
+            U
+          </div>
+          <div class="space-y-0.5">
+            <h2 class="text-sm font-semibold tracking-wider uppercase">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</h2>
+            <h1 class="text-lg font-bold uppercase tracking-tight">UNIVERSITAS TEKNOLOGI NASIONAL</h1>
+            <p class="text-xs font-medium">FAKULTAS TEKNIK &bull; PROGRAM STUDI S1 TEKNIK INFORMATIKA</p>
+            <p class="text-[11px] text-slate-600">Jl. Prof. Sudarto, S.H., Kampus Terpadu, Telp: (021) 7891234, Email: info@univ.ac.id</p>
+          </div>
+        </div>
+        <div class="w-full border-t border-black mt-3 pt-2">
+          <h3 class="text-sm font-bold uppercase tracking-wide">TRANSKRIP AKADEMIK SEMENTARA</h3>
+          <p class="text-xs font-mono">NOMOR DOKUMEN: 0418/UN-FT/TA/2024</p>
+        </div>
+      </div>
+
+      <!-- Info Identitas Mahasiswa Transkrip (Khusus Print) -->
+      <div class="hidden print-kop grid-cols-2 gap-4 text-xs border-b border-black pb-3 mb-4">
+        <div>
+          <p><strong>NIM:</strong> 2112012014</p>
+          <p><strong>Nama Lengkap:</strong> Rian Hidayat</p>
+          <p><strong>Tempat, Tgl Lahir:</strong> Jakarta, 14 Mei 2003</p>
+        </div>
+        <div>
+          <p><strong>Program Pendidikan:</strong> Sarjana (S1)</p>
+          <p><strong>Program Studi:</strong> S1 Teknik Informatika</p>
+          <p><strong>Status Mahasiswa:</strong> Aktif</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4 no-print">
+        <div>
+          <h1 class="text-xl font-bold">Transkrip Akademik Lengkap</h1>
+          <p class="text-xs text-slate-500">NIM: 2112012014 &bull; Program Studi S1 Teknik Informatika</p>
+        </div>
+        <button onclick="window.print()" class="px-3 py-2 border border-slate-300 rounded text-xs font-medium hover:bg-slate-50 flex items-center gap-1.5 min-h-[44px]">
+          <i data-lucide="printer" class="w-4 h-4"></i> Cetak Transkrip Resmi
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-white border border-slate-200 p-3.5 rounded-md shadow-sm">
+          <span class="text-[11px] text-slate-500 block">Total SKS Diambil</span>
+          <span class="text-xl font-bold font-mono">84 SKS</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-3.5 rounded-md shadow-sm">
+          <span class="text-[11px] text-slate-500 block">Total SKS Wajib Lulus</span>
+          <span class="text-xl font-bold font-mono">144 SKS</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-3.5 rounded-md shadow-sm">
+          <span class="text-[11px] text-slate-500 block">IPK Kumulatif Akhir</span>
+          <span class="text-xl font-bold font-mono text-emerald-700">3.75</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-3.5 rounded-md shadow-sm">
+          <span class="text-[11px] text-slate-500 block">Predikat Kelulusan Sementara</span>
+          <span class="text-sm font-bold text-slate-800 mt-1 block">Dengan Pujian (Cumlaude)</span>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 text-center w-12">No</th>
+              <th class="p-3 w-24">Kode MK</th>
+              <th class="p-3">Mata Kuliah</th>
+              <th class="p-3 text-center w-16">SKS</th>
+              <th class="p-3 text-center w-24">Nilai Huruf</th>
+              <th class="p-3 text-center w-20">Bobot</th>
+              <th class="p-3 text-center w-24">SKS x Bobot</th>
+            </tr>
+          </thead>
+          <tbody id="transkrip-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tanda Tangan Pengesahan Transkrip Lengkap (Khusus Print) -->
+      <div class="hidden print-signature grid-cols-2 gap-8 pt-8 mt-6 text-xs text-center">
+        <div class="space-y-16">
+          <p>Mengetahui,<br>Wakil Dekan Bidang Akademik,</p>
+          <div>
+            <p class="font-bold underline">Prof. Dr. Ir. Slamet Riyadi, M.Eng.</p>
+            <p class="font-mono text-[11px]">NIP. 196811201994031001</p>
+          </div>
+        </div>
+        <div class="space-y-16">
+          <p>Semarang, 27 Oktober 2024<br>Ketua Program Studi S1 Teknik Informatika,</p>
+          <div>
+            <p class="font-bold underline">Prof. Dr. Hendra Wijaya, M.Sc.</p>
+            <p class="font-mono text-[11px]">NIP. 196503141990031001</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRESENSI MAHASISWA TAB -->
+    <section id="view-presensi-mhs" class="hidden space-y-6">
+      <div class="border-b pb-4">
+        <h1 class="text-xl font-bold">Presensi Perkuliahan Mandiri</h1>
+        <p class="text-xs text-slate-500">Masukkan kode token yang diberikan oleh dosen saat perkuliahan berlangsung.</p>
+      </div>
+
+      <!-- Token Input Box -->
+      <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-3">
+        <h3 class="text-sm font-semibold flex items-center gap-2">
+          <i data-lucide="key-round" class="w-4 h-4 text-slate-700"></i> Validasi Token Kehadiran Sesi Hari Ini
+        </h3>
+        <p class="text-xs text-slate-500">Mata kuliah aktif saat ini: <strong>IF2101 - Struktur Data & Algoritma (Kelas A)</strong></p>
+        <div class="flex flex-col sm:flex-row gap-2 max-w-md">
+          <input id="input-token-mhs" type="text" placeholder="Contoh: BST-8921" class="border border-slate-300 rounded px-3 py-2 text-xs font-mono uppercase tracking-wider flex-1 min-h-[44px]">
+          <button onclick="submitTokenMhs()" class="px-5 py-2.5 bg-slate-900 text-white rounded text-xs font-semibold hover:bg-slate-800 min-h-[44px]">
+            Konfirmasi Kehadiran
+          </button>
+        </div>
+        <div id="mhs-presensi-feedback" class="hidden p-3 rounded text-xs font-medium"></div>
+      </div>
+
+      <!-- Rekap Kehadiran Semester Ini -->
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <div class="p-4 border-b">
+          <h3 class="text-sm font-semibold">Monitoring Kehadiran Kuliah (Syarat UAS: Min. 75%)</h3>
+        </div>
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-24">Kode</th>
+              <th class="p-3">Mata Kuliah</th>
+              <th class="p-3 text-center w-24">Total Sesi</th>
+              <th class="p-3 text-center w-24">Hadir</th>
+              <th class="p-3 text-center w-20">Izin</th>
+              <th class="p-3 text-center w-20">Alpa</th>
+              <th class="p-3 text-center w-32">Persentase</th>
+              <th class="p-3 text-center w-28">Status UAS</th>
+            </tr>
+          </thead>
+          <tbody id="mhs-presensi-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- KEUANGAN & UKT MAHASISWA TAB -->
+    <section id="view-keuangan-mhs" class="hidden space-y-6">
+      <div class="border-b pb-4">
+        <h1 class="text-xl font-bold">Informasi Tagihan & Pembayaran UKT</h1>
+        <p class="text-xs text-slate-500">Uang Kuliah Tunggal (UKT) - Golongan V &bull; S1 Teknik Informatika</p>
+      </div>
+
+      <!-- Status Tagihan Semester Ini -->
+      <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+          <div>
+            <span class="text-xs text-slate-500 block font-mono">Invoice Semester Ganjil 2024/2025</span>
+            <span class="text-xl font-bold font-mono text-slate-900">Rp 6.500.000</span>
+          </div>
+          <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold px-3 py-1 rounded">
+            LUNAS (Terverifikasi Bank)
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div>
+            <span class="text-slate-500 block">Nomor Virtual Account BNI</span>
+            <span class="font-mono font-bold text-slate-800">9881 2012 2112 0120</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Waktu Pembayaran</span>
+            <span class="font-medium text-slate-800">12 Agustus 2024, 10:45 WIB</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Syarat Administrasi KRS</span>
+            <span class="font-semibold text-emerald-700">Terbuka & Bebas Administrasi</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Riwayat Pembayaran Sebelumnya -->
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <div class="p-4 border-b">
+          <h3 class="text-sm font-semibold">Riwayat Pembayaran Uang Kuliah</h3>
+        </div>
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-32">Semester</th>
+              <th class="p-3 w-36">Tanggal Bayar</th>
+              <th class="p-3">Kanal Pembayaran</th>
+              <th class="p-3 text-right w-36">Nominal</th>
+              <th class="p-3 text-center w-28">Status</th>
+              <th class="p-3 text-center w-24">Bukti</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="p-3 font-semibold">Ganjil 2024/2025</td>
+              <td class="p-3 font-mono text-slate-600">12 Agu 2024</td>
+              <td class="p-3">BNI Virtual Account</td>
+              <td class="p-3 text-right font-mono font-bold">Rp 6.500.000</td>
+              <td class="p-3 text-center"><span class="bg-emerald-50 text-emerald-700 text-[11px] px-2 py-0.5 rounded font-semibold">Lunas</span></td>
+              <td class="p-3 text-center"><button onclick="alert('Mengunduh kuitansi resmi BNI')" class="text-slate-700 hover:underline font-medium">Unduh PDF</button></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-semibold">Genap 2023/2024</td>
+              <td class="p-3 font-mono text-slate-600">10 Jan 2024</td>
+              <td class="p-3">Mandiri Virtual Account</td>
+              <td class="p-3 text-right font-mono font-bold">Rp 6.500.000</td>
+              <td class="p-3 text-center"><span class="bg-emerald-50 text-emerald-700 text-[11px] px-2 py-0.5 rounded font-semibold">Lunas</span></td>
+              <td class="p-3 text-center"><button onclick="alert('Mengunduh kuitansi resmi Mandiri')" class="text-slate-700 hover:underline font-medium">Unduh PDF</button></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-semibold">Ganjil 2023/2024</td>
+              <td class="p-3 font-mono text-slate-600">14 Agu 2023</td>
+              <td class="p-3">BNI Virtual Account</td>
+              <td class="p-3 text-right font-mono font-bold">Rp 6.500.000</td>
+              <td class="p-3 text-center"><span class="bg-emerald-50 text-emerald-700 text-[11px] px-2 py-0.5 rounded font-semibold">Lunas</span></td>
+              <td class="p-3 text-center"><button onclick="alert('Mengunduh kuitansi resmi BNI')" class="text-slate-700 hover:underline font-medium">Unduh PDF</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PORTAL SKRIPSI / TA MAHASISWA TAB -->
+    <section id="view-tugas-akhir-mhs" class="hidden space-y-6">
+      <div class="border-b pb-4">
+        <h1 class="text-xl font-bold">Portal Tugas Akhir & Bimbingan Skripsi</h1>
+        <p class="text-xs text-slate-500">Pencatatan logbook bimbingan, upload draft dokumen, dan pengajuan seminar/sidang.</p>
+      </div>
+
+      <!-- Informasi Tugas Akhir -->
+      <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-3">
+          <div>
+            <span class="text-[11px] text-slate-500 block uppercase tracking-wider font-semibold">Judul Skripsi Disetujui</span>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 mt-0.5">
+              Rancang Bangun Sistem Informasi Akademik Terdistribusi Berbasis Micro-Frontend
+            </h3>
+          </div>
+          <span class="bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2.5 py-1 rounded font-semibold shrink-0">
+            Tahap: Seminar Proposal
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div>
+            <span class="text-slate-500 block">Dosen Pembimbing Utama</span>
+            <span class="font-semibold text-slate-800">Dr. Eng. Irwan Prasetyo, M.T.</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Dosen Pembimbing Pendamping</span>
+            <span class="font-semibold text-slate-800">Rina Kartika, S.Kom., M.Kom.</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Total Bimbingan Tercatat</span>
+            <span class="font-bold font-mono text-emerald-700">6 Sesi (Syarat Sempro: Min. 6 Sesi)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Tambah Logbook Bimbingan -->
+      <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm space-y-3">
+        <h3 class="text-sm font-semibold flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-slate-700"></i> Tambah Catatan Bimbingan (Logbook)
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="text-slate-600 block mb-1">Tanggal Bimbingan:</label>
+            <input id="log-date" type="date" value="2024-10-24" class="w-full border rounded px-3 py-2 min-h-[40px]">
+          </div>
+          <div>
+            <label class="text-slate-600 block mb-1">Bab / Bagian yang Dikonsultasikan:</label>
+            <input id="log-chapter" type="text" placeholder="Contoh: Bab III Metodologi Penelitian" class="w-full border rounded px-3 py-2 min-h-[40px]">
+          </div>
+        </div>
+        <div class="text-xs">
+          <label class="text-slate-600 block mb-1">Catatan & Masukan Dosen Pembimbing:</label>
+          <textarea id="log-notes" rows="2" placeholder="Tuliskan poin arahan dan perbaikan dari pembimbing..." class="w-full border rounded p-2"></textarea>
+        </div>
+        <div class="flex justify-end">
+          <button onclick="addLogbookMhs()" class="px-4 py-2 bg-slate-900 text-white rounded text-xs font-semibold hover:bg-slate-800 min-h-[40px]">
+            Simpan Catatan Bimbingan
+          </button>
+        </div>
+      </div>
+
+      <!-- Riwayat Logbook Bimbingan -->
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <div class="p-4 border-b">
+          <h3 class="text-sm font-semibold">Riwayat Bimbingan Terverifikasi</h3>
+        </div>
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-12 text-center">No</th>
+              <th class="p-3 w-28">Tanggal</th>
+              <th class="p-3 w-48">Bab / Topik</th>
+              <th class="p-3">Catatan Revisi Dosen</th>
+              <th class="p-3 text-center w-28">Status Verifikasi</th>
+            </tr>
+          </thead>
+          <tbody id="mhs-logbook-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- INPUT NILAI DOSEN TAB -->
+    <section id="view-input-nilai" class="hidden space-y-6">
+      <div class="border-b pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-bold">Input Nilai Perkuliahan</h1>
+          <p class="text-xs text-slate-500">Mata Kuliah: IF2101 - Struktur Data & Algoritma (Kelas A)</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-500 font-mono">Bobot: Tugas (20%), UTS (30%), UAS (40%), Presensi (10%)</span>
+        </div>
+      </div>
+
+      <div id="nilai-saved-alert" class="hidden p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md text-xs font-medium">
+        Perubahan nilai berhasil disimpan ke basis data!
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-28">NIM</th>
+              <th class="p-3">Nama Mahasiswa</th>
+              <th class="p-3 text-center w-24">Tugas (20%)</th>
+              <th class="p-3 text-center w-24">UTS (30%)</th>
+              <th class="p-3 text-center w-24">UAS (40%)</th>
+              <th class="p-3 text-center w-24">Presensi (10%)</th>
+              <th class="p-3 text-center w-20">Nilai Akhir</th>
+              <th class="p-3 text-center w-20">Grade</th>
+            </tr>
+          </thead>
+          <tbody id="input-nilai-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="saveNilaiDosen()" class="px-5 py-2.5 bg-slate-900 text-white rounded-md text-xs font-semibold hover:bg-slate-800 min-h-[44px]">
+          Simpan Seluruh Nilai
+        </button>
+      </div>
+    </section>
+
+    <!-- DASHBOARD DOSEN TAB -->
+    <section id="view-dashboard-dosen" class="hidden space-y-6">
+      <div class="bg-white border border-slate-200 rounded-lg p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold">Dr. Eng. Irwan Prasetyo, M.T.</h1>
+            <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-2 py-0.5 rounded">Lektor Kepala</span>
+          </div>
+          <p class="text-xs text-slate-500 font-mono">NIP: 197805122003121002 &bull; Homebase: S1 Teknik Informatika</p>
+          <p class="text-xs text-slate-600">Status Beban Kerja Dosen (BKD): <span class="font-semibold text-emerald-700">Memenuhi Syarat (14 SKS)</span></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="switchTab('presensi-dosen')" class="px-3.5 py-2 bg-slate-900 text-white rounded-md text-xs font-semibold hover:bg-slate-800 transition min-h-[44px]">
+            Buka Presensi Hari Ini
+          </button>
+        </div>
+      </div>
+
+      <!-- Metric Cards Dosen -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Total Beban Mengajar</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">10 SKS</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">3 Kelas Paralel</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Mahasiswa Bimbingan DPA</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">18 Mhs</span>
+          <span class="text-[11px] text-amber-600 font-medium block mt-0.5">2 Butuh Approval KRS</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Mahasiswa Bimbingan Skripsi</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">4 Mhs</span>
+          <span class="text-[11px] text-emerald-600 font-medium block mt-0.5">1 Siap Ujian Sidang</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Koreksi Nilai Mahasiswa</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">100%</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">Batas: 15 Des 2024</span>
+        </div>
+      </div>
+
+      <!-- Quick Action / Alert Antrean -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Antrean Tugas DPA -->
+        <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b pb-2">
+            <h3 class="text-sm font-bold flex items-center gap-2">
+              <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600"></i> Antrean Verifikasi Akademik
+            </h3>
+            <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-medium">Prioritas</span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="border p-2.5 rounded bg-slate-50 flex justify-between items-center">
+              <div>
+                <span class="font-semibold block">Rian Hidayat (2112012014)</span>
+                <span class="text-slate-500">Pengajuan KRS Ganjil 2024/2025 (15 SKS)</span>
+              </div>
+              <button onclick="switchTab('dosen')" class="px-2.5 py-1 text-xs bg-white border border-slate-300 rounded hover:bg-slate-100 font-medium min-h-[32px]">Review</button>
+            </div>
+            <div class="border p-2.5 rounded bg-slate-50 flex justify-between items-center">
+              <div>
+                <span class="font-semibold block">Fajar Nugraha (2112012030)</span>
+                <span class="text-rose-600 font-medium">Beban melebihi kuota IPS (22/18 SKS)</span>
+              </div>
+              <button onclick="switchTab('dosen')" class="px-2.5 py-1 text-xs bg-white border border-slate-300 rounded hover:bg-slate-100 font-medium min-h-[32px]">Review</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jadwal Mengajar Hari Ini -->
+        <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b pb-2">
+            <h3 class="text-sm font-bold flex items-center gap-2">
+              <i data-lucide="book-marked" class="w-4 h-4 text-slate-700"></i> Jadwal Mengajar Hari Ini
+            </h3>
+            <span class="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">Senin</span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="border p-2.5 rounded bg-slate-50 space-y-1">
+              <div class="flex justify-between font-semibold">
+                <span>IF2101 - Struktur Data & Algoritma (A)</span>
+                <span class="font-mono text-emerald-700">Sedang Berlangsung</span>
+              </div>
+              <div class="text-slate-500 flex gap-4">
+                <span>Waktu: 08:00 - 11:20 WIB</span>
+                <span>Ruang: TI-301</span>
+                <span>Peserta: 38 Mhs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRESENSI PERKULIAHAN DOSEN TAB -->
+    <section id="view-presensi-dosen" class="hidden space-y-6">
+      <div class="border-b pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-bold">Presensi & Berita Acara Perkuliahan</h1>
+          <p class="text-xs text-slate-500">Mata Kuliah: IF2101 - Struktur Data & Algoritma (Kelas A) &bull; Ruang TI-301</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="generateOtpPresensi()" class="px-3.5 py-2 bg-slate-900 text-white rounded text-xs font-semibold hover:bg-slate-800 min-h-[44px] flex items-center gap-1.5">
+            <i data-lucide="key" class="w-4 h-4"></i> Generate Token OTP Mahasiswa
+          </button>
+        </div>
+      </div>
+
+      <!-- Status Sesi Kuliah -->
+      <div class="bg-white border border-slate-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs shadow-sm">
+        <div>
+          <span class="text-slate-500 block">Pertemuan Ke</span>
+          <span class="text-base font-bold text-slate-900 font-mono">9 dari 16 Sesi</span>
+          <span class="text-slate-500 block mt-0.5">Topik: Binary Search Tree (BST) & AVL</span>
+        </div>
+        <div>
+          <span class="text-slate-500 block">Kode Token Mahasiswa (Aktif 15 Menit)</span>
+          <span id="presensi-otp-display" class="text-xl font-bold font-mono text-emerald-700 tracking-wider">BST-8921</span>
+          <span class="text-slate-500 block mt-0.5">Mahasiswa input via aplikasi mobile</span>
+        </div>
+        <div>
+          <span class="text-slate-500 block">Rekap Kehadiran Sesi Ini</span>
+          <span id="presensi-summary-stat" class="text-base font-bold font-mono text-slate-900">36 Hadir &bull; 1 Sakit &bull; 1 Alpa</span>
+          <span class="text-emerald-600 block mt-0.5 font-medium">Tingkat Kehadiran: 94.7%</span>
+        </div>
+      </div>
+
+      <div id="presensi-alert" class="hidden p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-xs font-medium">
+        Berita acara dan rekap presensi pertemuan ke-9 berhasil ditutup dan terkunci.
+      </div>
+
+      <!-- Tabel Presensi Mahasiswa -->
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-12 text-center">No</th>
+              <th class="p-3 w-28">NIM</th>
+              <th class="p-3">Nama Mahasiswa</th>
+              <th class="p-3 text-center w-36">Status Kehadiran</th>
+              <th class="p-3 text-center w-28">Waktu Presensi</th>
+              <th class="p-3 text-center w-28">Kumulatif Hadir</th>
+            </tr>
+          </thead>
+          <tbody id="presensi-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button onclick="simpanPresensi()" class="px-5 py-2.5 bg-slate-900 text-white rounded text-xs font-semibold hover:bg-slate-800 min-h-[44px]">
+          Kunci & Simpan Berita Acara Perkuliahan
+        </button>
+      </div>
+    </section>
+
+    <!-- BIMBINGAN SKRIPSI / TA TAB -->
+    <section id="view-bimbingan-ta" class="hidden space-y-6">
+      <div class="border-b pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-bold">Bimbingan Skripsi & Tugas Akhir</h1>
+          <p class="text-xs text-slate-500">Dosen Pembimbing: Dr. Eng. Irwan Prasetyo, M.T. &bull; Kuota Bimbingan: 4 / 8 Mahasiswa</p>
+        </div>
+      </div>
+
+      <!-- Tabel Mahasiswa Bimbingan Skripsi -->
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-28">NIM</th>
+              <th class="p-3 w-44">Nama Mahasiswa</th>
+              <th class="p-3">Judul Skripsi</th>
+              <th class="p-3 text-center w-32">Tahap Bimbingan</th>
+              <th class="p-3 text-center w-24">Log Bimbingan</th>
+              <th class="p-3 text-right w-28">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="bimbingan-ta-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6. BAAK DASHBOARD TAB -->
+    <section id="view-baak-dashboard" class="hidden space-y-6">
+      <div class="bg-white border border-slate-200 rounded-lg p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold">Biro Administrasi Akademik (BAAK)</h1>
+            <span class="bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-semibold px-2 py-0.5 rounded">Super Administrator</span>
+          </div>
+          <p class="text-xs text-slate-500 font-mono">Tahun Akademik: 2024/2025 Ganjil &bull; Status Sistem: Online & Stabil</p>
+          <p class="text-xs text-slate-600">Total Basis Data: <span class="font-semibold text-slate-900">14.280 Mahasiswa Aktif &bull; 620 Dosen</span></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="switchTab('baak-kalender')" class="px-3.5 py-2 bg-slate-900 text-white rounded text-xs font-semibold hover:bg-slate-800 transition min-h-[44px]">
+            Kelola Periode & Kalender KRS
+          </button>
+        </div>
+      </div>
+
+      <!-- Metric Cards BAAK -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Progres Pengisian KRS Kampus</span>
+          <span class="text-2xl font-bold font-mono text-emerald-700">91.4%</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">13.052 dari 14.280 Mhs</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Total Kelas Perkuliahan</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">412 Kelas</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">8 Fakultas Tersebar</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Ruang Kuliah Terpakai</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">94.2%</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">68 Ruang Kelas Fisik</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Status Gerbang KRS</span>
+          <span id="baak-gate-status-text" class="text-2xl font-bold font-mono text-emerald-700">DIBUKA</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">Sisa 3 Hari Penutupan</span>
+        </div>
+      </div>
+
+      <!-- Rekap Per Fakultas -->
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <div class="p-4 border-b">
+          <h3 class="text-sm font-semibold">Monitoring Pengisian KRS Seluruh Fakultas</h3>
+        </div>
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3">Fakultas</th>
+              <th class="p-3 text-center w-28">Total Mahasiswa</th>
+              <th class="p-3 text-center w-28">KRS Disetujui</th>
+              <th class="p-3 text-center w-28">Menunggu DPA</th>
+              <th class="p-3 text-center w-28">Belum Mengisi</th>
+              <th class="p-3 text-center w-36">Persentase Selesai</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="p-3 font-semibold">Fakultas Teknik</td>
+              <td class="p-3 text-center font-mono">2.840</td>
+              <td class="p-3 text-center font-mono text-emerald-700 font-bold">2.610</td>
+              <td class="p-3 text-center font-mono text-amber-700">180</td>
+              <td class="p-3 text-center font-mono text-rose-700">50</td>
+              <td class="p-3 text-center font-mono font-bold">91.9%</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-semibold">Fakultas Ekonomika dan Bisnis</td>
+              <td class="p-3 text-center font-mono">3.120</td>
+              <td class="p-3 text-center font-mono text-emerald-700 font-bold">2.900</td>
+              <td class="p-3 text-center font-mono text-amber-700">150</td>
+              <td class="p-3 text-center font-mono text-rose-700">70</td>
+              <td class="p-3 text-center font-mono font-bold">92.9%</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-semibold">Fakultas Kedokteran</td>
+              <td class="p-3 text-center font-mono">1.450</td>
+              <td class="p-3 text-center font-mono text-emerald-700 font-bold">1.420</td>
+              <td class="p-3 text-center font-mono text-amber-700">20</td>
+              <td class="p-3 text-center font-mono text-rose-700">10</td>
+              <td class="p-3 text-center font-mono font-bold">97.9%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 7. BAAK KALENDER TAB -->
+    <section id="view-baak-kalender" class="hidden space-y-6">
+      <div class="border-b pb-4">
+        <h1 class="text-xl font-bold">Kontrol Gerbang Kalender Akademik</h1>
+        <p class="text-xs text-slate-500">Buka dan tutup gerbang sistem secara terpusat untuk seluruh sivitas akademika.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Saklar Gerbang KRS -->
+        <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="font-bold text-sm text-slate-900">Gerbang Pengisian KRS Mahasiswa</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Jika ditutup, mahasiswa hanya bisa melihat KRS tanpa bisa menambah/mengubah mata kuliah.</p>
+            </div>
+            <span id="badge-gate-krs" class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2.5 py-1 rounded font-bold">DIBUKA</span>
+          </div>
+          <div class="flex items-center gap-3 pt-2">
+            <button onclick="toggleKrsGate(true)" class="px-4 py-2 bg-emerald-700 text-white rounded text-xs font-semibold hover:bg-emerald-800 min-h-[40px]">Buka Gerbang KRS</button>
+            <button onclick="toggleKrsGate(false)" class="px-4 py-2 bg-rose-700 text-white rounded text-xs font-semibold hover:bg-rose-800 min-h-[40px]">Tutup & Kunci KRS</button>
+          </div>
+        </div>
+
+        <!-- Saklar Input Nilai Dosen -->
+        <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="font-bold text-sm text-slate-900">Gerbang Input Nilai Perkuliahan Dosen</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Batas akhir penginputan nilai semester aktif oleh dosen pengampu.</p>
+            </div>
+            <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2.5 py-1 rounded font-bold">DIBUKA</span>
+          </div>
+          <div class="text-xs text-slate-600 font-mono">Batas Tenggat: 15 Desember 2024, 23:59 WIB</div>
+          <div class="flex items-center gap-3 pt-1">
+            <button onclick="alert('Gerbang nilai dikunci untuk seluruh fakultas')" class="px-4 py-2 border border-slate-300 rounded text-xs font-semibold hover:bg-slate-50 min-h-[40px]">Kunci Penginputan Nilai</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. BAAK RUANG & PLOTTING KELAS TAB -->
+    <section id="view-baak-ruang" class="hidden space-y-6">
+      <div class="border-b pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-bold">Plotting Kelas & Alokasi Ruang Fisik</h1>
+          <p class="text-xs text-slate-500">Manajemen utilitas gedung perkuliahan dan pencegahan bentrok jadwal.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded font-semibold">
+            Bentrok Jadwal Terdeteksi: 0 Konflik
+          </span>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-28">Kode Ruang</th>
+              <th class="p-3">Gedung / Lokasi</th>
+              <th class="p-3 text-center w-24">Kapasitas</th>
+              <th class="p-3 text-center w-24">Terisi</th>
+              <th class="p-3">Mata Kuliah Terplot</th>
+              <th class="p-3 text-center w-28">Status Bentrok</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="p-3 font-mono font-bold">TI-301</td>
+              <td class="p-3">Gedung Kuliah Bersama Lt. 3</td>
+              <td class="p-3 text-center font-mono">45 Kursi</td>
+              <td class="p-3 text-center font-mono font-semibold">38 Peserta</td>
+              <td class="p-3">IF2101 - Struktur Data (Senin, 08:00 - 11:20)</td>
+              <td class="p-3 text-center"><span class="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded font-bold">Aman (Bebas Bentrok)</span></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-mono font-bold">TI-204</td>
+              <td class="p-3">Gedung Kuliah Bersama Lt. 2</td>
+              <td class="p-3 text-center font-mono">40 Kursi</td>
+              <td class="p-3 text-center font-mono font-semibold">35 Peserta</td>
+              <td class="p-3">IF2102 - Basis Data Lanjut (Selasa, 10:00 - 12:30)</td>
+              <td class="p-3 text-center"><span class="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded font-bold">Aman (Bebas Bentrok)</span></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-mono font-bold">LAB-RPL</td>
+              <td class="p-3">Laboratorium Komputer Lt. 1</td>
+              <td class="p-3 text-center font-mono">32 PC</td>
+              <td class="p-3 text-center font-mono font-semibold">22 Peserta</td>
+              <td class="p-3">IF2103 - Pemrograman Web (Rabu, 13:00 - 15:30)</td>
+              <td class="p-3 text-center"><span class="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded font-bold">Aman (Bebas Bentrok)</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 9. KAPRODI DASHBOARD (MUTU & DETEKSI DO) TAB -->
+    <section id="view-kaprodi-dashboard" class="hidden space-y-6">
+      <div class="bg-white border border-slate-200 rounded-lg p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold">Prof. Dr. Hendra Wijaya, M.Sc.</h1>
+            <span class="bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-semibold px-2 py-0.5 rounded">Ketua Program Studi S1 Teknik Informatika</span>
+          </div>
+          <p class="text-xs text-slate-500 font-mono">Akreditasi Prodi: Unggul (LAM INFOKOM) &bull; Periode Jabatan: 2022 - 2026</p>
+          <p class="text-xs text-slate-600">Total Mahasiswa Aktif Prodi: <span class="font-semibold text-slate-900">640 Mahasiswa</span></p>
+        </div>
+      </div>
+
+      <!-- Metric Mutu Kaprodi -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Rata-rata IPK Mahasiswa Prodi</span>
+          <span class="text-2xl font-bold font-mono text-emerald-700">3.48</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">Target Prodi: &ge; 3.25</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Lulus Tepat Waktu (4 Tahun)</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">86.2%</span>
+          <span class="text-[11px] text-emerald-600 font-medium block mt-0.5">Meningkat 3.1% YoY</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Mahasiswa Terancam DO</span>
+          <span class="text-2xl font-bold font-mono text-rose-600">3 Mhs</span>
+          <span class="text-[11px] text-rose-600 font-medium block mt-0.5">Evaluasi Tahap 1 (Sem. 4)</span>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+          <span class="text-xs text-slate-500 block">Peserta Program MBKM</span>
+          <span class="text-2xl font-bold font-mono text-slate-900">42 Mhs</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">MSIB, IISMA & Riset</span>
+        </div>
+      </div>
+
+      <!-- Tabel Deteksi Dini Mahasiswa Kritis (Early Warning DO) -->
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <div class="p-4 border-b flex justify-between items-center">
+          <div>
+            <h3 class="text-sm font-semibold text-rose-900">Early Warning: Mahasiswa Dalam Pengawasan Akademik Kritis</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Mahasiswa dengan IPK &lt; 2.20 atau SKS kumulatif tidak memenuhi syarat evaluasi batas masa studi.</p>
+          </div>
+          <button onclick="alert('Mengirim surat peringatan otomatis ke DPA')" class="px-3 py-1.5 bg-rose-600 text-white rounded text-xs font-semibold hover:bg-rose-700">
+            Kirim Notifikasi DPA
+          </button>
+        </div>
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-28">NIM</th>
+              <th class="p-3">Nama Mahasiswa</th>
+              <th class="p-3 text-center w-20">Semester</th>
+              <th class="p-3 text-center w-20">IPK</th>
+              <th class="p-3 text-center w-24">SKS Lulus</th>
+              <th class="p-3">Dosen Pembimbing Akademik</th>
+              <th class="p-3 text-center w-32">Status Resiko</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="p-3 font-mono font-semibold">2112012030</td>
+              <td class="p-3 font-medium">Fajar Nugraha</td>
+              <td class="p-3 text-center font-mono">5</td>
+              <td class="p-3 text-center font-mono font-bold text-rose-600">2.15</td>
+              <td class="p-3 text-center font-mono">54 SKS</td>
+              <td class="p-3">Dr. Eng. Irwan Prasetyo, M.T.</td>
+              <td class="p-3 text-center"><span class="bg-rose-50 text-rose-700 border border-rose-200 text-[10px] px-2 py-0.5 rounded font-bold">Peringatan 1</span></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-mono font-semibold">2012011088</td>
+              <td class="p-3 font-medium">Reza Pratama</td>
+              <td class="p-3 text-center font-mono">7</td>
+              <td class="p-3 text-center font-mono font-bold text-rose-600">1.98</td>
+              <td class="p-3 text-center font-mono">78 SKS</td>
+              <td class="p-3">Rina Kartika, M.Kom.</td>
+              <td class="p-3 text-center"><span class="bg-rose-50 text-rose-700 border border-rose-200 text-[10px] px-2 py-0.5 rounded font-bold">Peringatan 2</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 10. KAPRODI PENUGASAN PEMBIMBING & PENGUJI TAB -->
+    <section id="view-kaprodi-plotting" class="hidden space-y-6">
+      <div class="border-b pb-4">
+        <h1 class="text-xl font-bold">Plotting Dosen Pembimbing & Penguji Sidang</h1>
+        <p class="text-xs text-slate-500">Penetapan Surat Keputusan (SK) pembimbing skripsi dan dewan penguji sidang sarjana.</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-28">NIM</th>
+              <th class="p-3 w-40">Mahasiswa</th>
+              <th class="p-3">Judul Skripsi</th>
+              <th class="p-3 w-48">Pembimbing 1 (Utama)</th>
+              <th class="p-3 w-48">Pembimbing 2 / Penguji</th>
+              <th class="p-3 text-center w-28">Aksi SK</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="p-3 font-mono font-semibold">2112012014</td>
+              <td class="p-3 font-medium">Rian Hidayat</td>
+              <td class="p-3 text-slate-700">Rancang Bangun Sistem Informasi Akademik Terdistribusi</td>
+              <td class="p-3">
+                <select class="w-full border rounded p-1 text-xs">
+                  <option selected>Dr. Eng. Irwan Prasetyo</option>
+                  <option>Ahmad Fauzi, M.Cs.</option>
+                </select>
+              </td>
+              <td class="p-3">
+                <select class="w-full border rounded p-1 text-xs">
+                  <option selected>Rina Kartika, M.Kom.</option>
+                  <option>Bambang Wijaya, M.T.</option>
+                </select>
+              </td>
+              <td class="p-3 text-center">
+                <button onclick="alert('SK Pembimbing resmi diterbitkan dan dikirim ke portal dosen')" class="px-3 py-1.5 bg-slate-900 text-white rounded text-xs font-semibold hover:bg-slate-800">
+                  Terbitkan SK
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 11. KAPRODI KONVERSI NILAI MBKM TAB -->
+    <section id="view-kaprodi-mbkm" class="hidden space-y-6">
+      <div class="border-b pb-4">
+        <h1 class="text-xl font-bold">Validasi & Konversi Nilai MBKM</h1>
+        <p class="text-xs text-slate-500">Ekuivalensi 20 SKS kegiatan Magang Bersertifikat & Studi Independen ke mata kuliah kurikulum.</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-28">NIM</th>
+              <th class="p-3 w-40">Mahasiswa</th>
+              <th class="p-3">Mitra & Posisi MBKM</th>
+              <th class="p-3 text-center w-24">SKS Diakui</th>
+              <th class="p-3">Mata Kuliah Konversi</th>
+              <th class="p-3 text-center w-28">Aksi Kaprodi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="p-3 font-mono font-semibold">2012011019</td>
+              <td class="p-3 font-medium">Nadia Utami</td>
+              <td class="p-3">PT Tokopedia &bull; Cloud Infrastructure Engineer</td>
+              <td class="p-3 text-center font-mono font-bold">20 SKS</td>
+              <td class="p-3 text-slate-600">Sistem Terdistribusi (3), Jaringan Lanjut (3), Magang Industri (14)</td>
+              <td class="p-3 text-center">
+                <button onclick="alert('Konversi nilai 20 SKS disahkan ke KHS!')" class="px-3 py-1.5 bg-emerald-700 text-white rounded text-xs font-semibold hover:bg-emerald-800">
+                  Sahkan Konversi
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. PORTAL DOSEN TAB -->
+    <section id="view-dosen" class="hidden space-y-6">
+      <div class="border-b pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-bold">Portal DPA: Persetujuan KRS</h1>
+          <p class="text-xs text-slate-500">Dosen Pembimbing Akademik: Dr. Eng. Irwan Prasetyo, M.T. &bull; NIP: 197805122003121002</p>
+        </div>
+        <span class="bg-amber-100 text-amber-800 border border-amber-300 text-xs px-2.5 py-1 rounded font-medium">
+          Menunggu Review: <strong id="pending-count">2 Mahasiswa</strong>
+        </span>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+            <tr>
+              <th class="p-3 w-28">NIM</th>
+              <th class="p-3">Nama Mahasiswa</th>
+              <th class="p-3 text-center w-20">IPK</th>
+              <th class="p-3 text-center w-28">SKS / Maks</th>
+              <th class="p-3 text-center w-36">Status</th>
+              <th class="p-3 text-right w-28">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="dosen-table-body" class="divide-y divide-slate-100">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Review Dosen -->
+  <div id="review-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-xl w-full p-5 space-y-4 shadow-xl">
+      <div class="flex justify-between items-start border-b pb-3">
+        <div>
+          <h3 class="font-bold text-base">Tinjauan Rencana Studi Mahasiswa</h3>
+          <p id="modal-mhs-info" class="text-xs text-slate-500 font-mono mt-0.5"></p>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-xs font-semibold block text-slate-700">Mata Kuliah Diajukan:</span>
+        <div class="border rounded max-h-48 overflow-y-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b text-slate-600">
+              <tr>
+                <th class="p-2">Kode</th>
+                <th class="p-2">Mata Kuliah</th>
+                <th class="p-2 text-center">Kelas</th>
+                <th class="p-2 text-center">SKS</th>
+              </tr>
+            </thead>
+            <tbody id="modal-matkul-body" class="divide-y divide-slate-100">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-xs font-medium text-slate-700 block">Catatan Dosen:</label>
+        <textarea id="modal-notes" rows="2" class="w-full border rounded p-2 text-xs" placeholder="Tuliskan catatan akademik atau revisi jika diperlukan..."></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button onclick="closeModal()" class="px-3 py-2 border rounded text-xs font-medium hover:bg-slate-50">Batal</button>
+        <button onclick="confirmAction('REJECT')" class="px-3 py-2 bg-rose-600 text-white rounded text-xs font-medium hover:bg-rose-700">Tolak KRS</button>
+        <button onclick="confirmAction('APPROVE')" class="px-3 py-2 bg-slate-900 text-white rounded text-xs font-medium hover:bg-slate-800">Setujui KRS</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    Sistem Informasi Akademik Universitas &copy; 2024 &bull; Lingkungan Enterprise Terverifikasi
+  </footer>
+
+  <script>
+    // Data State
+    const MOCK_MATKUL = [
+      { id: "mk-1", kode: "IF2101", nama: "Struktur Data & Algoritma", sks: 4, semester: 3, kelas: "A", dosen: "Dr. Eng. Irwan Prasetyo, M.T.", jadwal: "Senin, 08:00 - 11:20", ruang: "TI-301", kuota: 40, terisi: 38 },
+      { id: "mk-2", kode: "IF2102", nama: "Basis Data Lanjut", sks: 3, semester: 3, kelas: "B", dosen: "Rina Kartika, S.Kom., M.Kom.", jadwal: "Selasa, 10:00 - 12:30", ruang: "TI-204", kuota: 35, terisi: 35 },
+      { id: "mk-3", kode: "IF2103", nama: "Pemrograman Web Berbasis Komponen", sks: 3, semester: 3, kelas: "A", dosen: "Ahmad Fauzi, M.Cs.", jadwal: "Rabu, 13:00 - 15:30", ruang: "LAB-RPL", kuota: 30, terisi: 22 },
+      { id: "mk-4", kode: "KU2001", nama: "Kewarganegaraan", sks: 2, semester: 3, kelas: "C", dosen: "Drs. H. Mulyadi, M.Hum.", jadwal: "Kamis, 08:00 - 09:40", ruang: "GKU-102", kuota: 50, terisi: 41 },
+      { id: "mk-5", kode: "IF2104", nama: "Jaringan Komputer", sks: 3, semester: 3, kelas: "A", dosen: "Bambang Wijaya, S.T., M.T.", jadwal: "Jumat, 08:00 - 10:30", ruang: "TI-302", kuota: 35, terisi: 19 },
+    ];
+
+    let selectedKrs = ["mk-1", "mk-3", "mk-4", "mk-5"];
+
+    const MOCK_KHS = {
+      "2023-2": {
+        sksSem: 21, sksKum: 84, ips: 3.81, ipk: 3.75, maks: 24,
+        list: [
+          { no: 1, kode: "IF2201", nama: "Rekayasa Perangkat Lunak", sks: 3, nilai: "A", bobot: 4.0, total: 12.0 },
+          { no: 2, kode: "IF2202", nama: "Sistem Terdistribusi", sks: 3, nilai: "AB", bobot: 3.5, total: 10.5 },
+          { no: 3, kode: "IF2203", nama: "Interaksi Manusia & Komputer", sks: 3, nilai: "A", bobot: 4.0, total: 12.0 },
+          { no: 4, kode: "IF2204", nama: "Pemrograman Berorientasi Objek", sks: 4, nilai: "A", bobot: 4.0, total: 16.0 },
+          { no: 5, kode: "KU2002", nama: "Etika Profesi & Hukum Siber", sks: 2, nilai: "B", bobot: 3.0, total: 6.0 },
+          { no: 6, kode: "MA2101", nama: "Statistika & Probabilitas", sks: 3, nilai: "AB", bobot: 3.5, total: 10.5 },
+          { no: 7, kode: "IF2205", nama: "Praktikum Rekayasa PL", sks: 3, nilai: "A", bobot: 4.0, total: 12.0 },
+        ]
+      },
+      "2023-1": {
+        sksSem: 20, sksKum: 63, ips: 3.65, ipk: 3.72, maks: 24,
+        list: [
+          { no: 1, kode: "IF2101", nama: "Struktur Data & Algoritma", sks: 4, nilai: "AB", bobot: 3.5, total: 14.0 },
+          { no: 2, kode: "IF2102", nama: "Basis Data", sks: 3, nilai: "A", bobot: 4.0, total: 12.0 },
+          { no: 3, kode: "IF2104", nama: "Jaringan Komputer Dasar", sks: 3, nilai: "B", bobot: 3.0, total: 9.0 },
+          { no: 4, kode: "MA2001", nama: "Matematika Diskrit", sks: 3, nilai: "A", bobot: 4.0, total: 12.0 },
+        ]
+      }
+    };
+
+    const MOCK_JADWAL = [
+      { hari: "Senin", waktu: "08:00 - 11:20", kode: "IF2101", nama: "Struktur Data & Algoritma", kelas: "A", sks: 4, ruang: "TI-301 (Gedung GKB Lt. 3)", dosen: "Dr. Eng. Irwan Prasetyo, M.T." },
+      { hari: "Selasa", waktu: "10:00 - 12:30", kode: "IF2102", nama: "Basis Data Lanjut", kelas: "B", sks: 3, ruang: "TI-204 (Gedung GKB Lt. 2)", dosen: "Rina Kartika, S.Kom., M.Kom." },
+      { hari: "Rabu", waktu: "13:00 - 15:30", kode: "IF2103", nama: "Pemrograman Web Berbasis Komponen", kelas: "A", sks: 3, ruang: "LAB-RPL (Lab Komputer Lt. 1)", dosen: "Ahmad Fauzi, M.Cs." },
+      { hari: "Kamis", waktu: "08:00 - 09:40", kode: "KU2001", nama: "Kewarganegaraan", kelas: "C", sks: 2, ruang: "GKU-102 (Gedung Kuliah Umum)", dosen: "Drs. H. Mulyadi, M.Hum." },
+      { hari: "Jumat", waktu: "08:00 - 10:30", kode: "IF2104", nama: "Jaringan Komputer", kelas: "A", sks: 3, ruang: "TI-302 (Gedung GKB Lt. 3)", dosen: "Bambang Wijaya, S.T., M.T." },
+    ];
+
+    let MOCK_BIMBINGAN = [
+      {
+        nim: "2112012014",
+        nama: "Rian Hidayat",
+        ipk: 3.75,
+        sksDiajukan: 12,
+        maksSks: 24,
+        status: "Menunggu Persetujuan",
+        matkul: [
+          { kode: "IF2101", nama: "Struktur Data & Algoritma", kelas: "A", sks: 4 },
+          { kode: "IF2103", nama: "Pemrograman Web Berbasis Komponen", kelas: "A", sks: 3 },
+          { kode: "KU2001", nama: "Kewarganegaraan", kelas: "C", sks: 2 },
+          { kode: "IF2104", nama: "Jaringan Komputer", kelas: "A", sks: 3 },
+        ]
+      },
+      {
+        nim: "2112012030",
+        nama: "Fajar Nugraha",
+        ipk: 2.45,
+        sksDiajukan: 22,
+        maksSks: 18,
+        status: "Menunggu Persetujuan",
+        matkul: [
+          { kode: "IF2101", nama: "Struktur Data & Algoritma", kelas: "B", sks: 4 },
+          { kode: "IF2102", nama: "Basis Data Lanjut", kelas: "A", sks: 3 },
+        ]
+      },
+      {
+        nim: "2112012002",
+        nama: "Siti Rahmawati",
+        ipk: 3.90,
+        sksDiajukan: 24,
+        maksSks: 24,
+        status: "Disetujui",
+        matkul: []
+      },
+      {
+        nim: "2112012055",
+        nama: "Dimas Anggara",
+        ipk: 3.10,
+        sksDiajukan: 0,
+        maksSks: 22,
+        status: "Belum Mengisi",
+        matkul: []
+      }
+    ];
+
+    let currentRole = "MAHASISWA";
+    let IS_KRS_GATE_OPEN = true;
+    let AUTH_TOKEN = null;
+
+    async function switchRole(role) {
+      currentRole = role;
+      const allRoles = ['MAHASISWA', 'DOSEN', 'BAAK', 'KAPRODI'];
+      
+      allRoles.forEach(r => {
+        const els = document.querySelectorAll(`[data-role="${r}"]`);
+        els.forEach(el => {
+          if (r === role) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        });
+      });
+
+      let nimNip = "2112012014";
+      if (role === "DOSEN") nimNip = "197805122003121002";
+      if (role === "BAAK") nimNip = "ADMIN-BAAK";
+      if (role === "KAPRODI") nimNip = "196503141990031001";
+
+      // Otentikasi ke Backend SQLite
+      try {
+        const authRes = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nim_nip: nimNip, password: 'password123' })
+        });
+        const authData = await authRes.json();
+        if (authData.token) {
+          AUTH_TOKEN = authData.token;
+          sessionStorage.setItem('siakad_token', AUTH_TOKEN);
+        }
+      } catch (e) {
+        console.warn("Auth offline:", e);
+      }
+
+      if (role === "MAHASISWA") {
+        document.getElementById('header-user-name').innerText = "Rian Hidayat";
+        document.getElementById('header-user-id').innerText = "2112012014 | S1 TI";
+        document.getElementById('header-user-avatar').innerText = "RH";
+        switchTab('dashboard');
+      } else if (role === "DOSEN") {
+        document.getElementById('header-user-name').innerText = "Dr. Eng. Irwan Prasetyo, M.T.";
+        document.getElementById('header-user-id').innerText = "NIP: 197805122003121002 | Dosen";
+        document.getElementById('header-user-avatar').innerText = "IP";
+        switchTab('dashboard-dosen');
+      } else if (role === "BAAK") {
+        document.getElementById('header-user-name').innerText = "Biro Administrasi Akademik (BAAK)";
+        document.getElementById('header-user-id').innerText = "Admin Pusat | Biro Rektorat";
+        document.getElementById('header-user-avatar').innerText = "BK";
+        switchTab('baak-dashboard');
+      } else if (role === "KAPRODI") {
+        document.getElementById('header-user-name').innerText = "Prof. Dr. Hendra Wijaya, M.Sc.";
+        document.getElementById('header-user-id').innerText = "Ketua Program Studi S1 TI";
+        document.getElementById('header-user-avatar').innerText = "HW";
+        switchTab('kaprodi-dashboard');
+      }
+      lucide.createIcons();
+    }
+
+    async function toggleKrsGate(isOpen) {
+      IS_KRS_GATE_OPEN = isOpen;
+      const gateText = document.getElementById('baak-gate-status-text');
+      const badgeGate = document.getElementById('badge-gate-krs');
+      const btnSubmitKrs = document.getElementById('btn-submit-krs');
+
+      // Persist status ke SQLite Database
+      try {
+        await fetch('/api/settings/krs-gate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isOpen })
+        });
+      } catch (err) {
+        console.warn('Gagal menyimpan status saklar ke backend:', err);
+      }
+
+      if (isOpen) {
+        if (gateText) {
+          gateText.innerText = "DIBUKA";
+          gateText.className = "text-2xl font-bold font-mono text-emerald-700";
+        }
+        if (badgeGate) {
+          badgeGate.innerText = "DIBUKA";
+          badgeGate.className = "bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2.5 py-1 rounded font-bold";
+        }
+        if (btnSubmitKrs) {
+          btnSubmitKrs.disabled = false;
+        }
+        alert("Gerbang Pengisian KRS Berhasil DIBUKA dan disimpan permanen di database!");
+      } else {
+        if (gateText) {
+          gateText.innerText = "DITUTUP";
+          gateText.className = "text-2xl font-bold font-mono text-rose-700";
+        }
+        if (badgeGate) {
+          badgeGate.innerText = "DITUTUP";
+          badgeGate.className = "bg-rose-50 text-rose-700 border border-rose-200 text-xs px-2.5 py-1 rounded font-bold";
+        }
+        if (btnSubmitKrs) {
+          btnSubmitKrs.disabled = true;
+        }
+        alert("Gerbang Pengisian KRS RESMI DIKUNCI oleh BAAK. Database memblokir seluruh transaksi pengisian KRS mahasiswa.");
+      }
+    }
+
+    // Tab Navigation
+    function switchTab(tabId) {
+      const views = [
+        'dashboard', 'krs', 'presensi-mhs', 'khs', 'jadwal', 'transkrip', 'keuangan-mhs', 'tugas-akhir-mhs',
+        'dashboard-dosen', 'presensi-dosen', 'dosen', 'input-nilai', 'bimbingan-ta',
+        'baak-dashboard', 'baak-kalender', 'baak-ruang',
+        'kaprodi-dashboard', 'kaprodi-plotting', 'kaprodi-mbkm'
+      ];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) el.classList.add('hidden');
+        const btn = document.getElementById(`nav-${v}`);
+        if (btn) {
+          btn.classList.remove('bg-slate-100', 'text-slate-900');
+          btn.classList.add('text-slate-600');
+        }
+      });
+      const activeView = document.getElementById(`view-${tabId}`);
+      if (activeView) activeView.classList.remove('hidden');
+      const activeBtn = document.getElementById(`nav-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-slate-100', 'text-slate-900');
+        activeBtn.classList.remove('text-slate-600');
+      }
+      lucide.createIcons();
+    }
+
+    // KRS Logics
+    function renderKrs() {
+      const tbody = document.getElementById('krs-table-body');
+      const mobileContainer = document.getElementById('krs-mobile-cards');
+      tbody.innerHTML = '';
+      mobileContainer.innerHTML = '';
+
+      let totalSks = 0;
+
+      MOCK_MATKUL.forEach(mk => {
+        const isChecked = selectedKrs.includes(mk.id);
+        const isFull = mk.terisi >= mk.kuota;
+        if (isChecked) totalSks += mk.sks;
+
+        // Desktop Row
+        const tr = document.createElement('tr');
+        tr.className = isChecked ? "bg-slate-50/70" : "";
+        tr.innerHTML = `
+          <td class="p-3 text-center">
+            <input type="checkbox" ${isChecked ? "checked" : ""} ${isFull ? "disabled" : ""} onchange="toggleKrs('${mk.id}')" class="h-4 w-4 rounded border-slate-300">
+          </td>
+          <td class="p-3 font-mono">${mk.kode}</td>
+          <td class="p-3 font-medium">${mk.nama}</td>
+          <td class="p-3 text-center">${mk.kelas}</td>
+          <td class="p-3 text-center font-mono font-semibold">${mk.sks}</td>
+          <td class="p-3 text-slate-600">${mk.dosen}</td>
+          <td class="p-3 text-slate-600">${mk.jadwal} (${mk.ruang})</td>
+          <td class="p-3 text-center font-mono">${mk.terisi}/${mk.kuota} ${isFull ? '<span class="text-rose-600 text-[10px] block font-bold">PENUH</span>' : ''}</td>
+        `;
+        tbody.appendChild(tr);
+
+        // Mobile Card
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-lg border text-xs space-y-2 ${isChecked ? 'bg-slate-50 border-slate-900' : 'bg-white border-slate-200'}`;
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-2">
+              <input type="checkbox" ${isChecked ? "checked" : ""} ${isFull ? "disabled" : ""} onchange="toggleKrs('${mk.id}')" class="h-4 w-4 rounded mt-0.5">
+              <div>
+                <span class="font-mono text-slate-500">${mk.kode} - Kelas ${mk.kelas}</span>
+                <h4 class="font-semibold text-slate-900 text-sm">${mk.nama}</h4>
+              </div>
+            </div>
+            <span class="font-mono font-bold px-2 py-0.5 bg-slate-100 rounded text-slate-700">${mk.sks} SKS</span>
+          </div>
+          <div class="text-slate-500 space-y-0.5 pl-6">
+            <div>Dosen: ${mk.dosen}</div>
+            <div>Waktu: ${mk.jadwal} (${mk.ruang})</div>
+            <div>Kuota: ${mk.terisi}/${mk.kuota} ${isFull ? '(Penuh)' : ''}</div>
+          </div>
+        `;
+        mobileContainer.appendChild(card);
+      });
+
+      document.getElementById('krs-total-indicator').innerText = `${totalSks} / 24 SKS`;
+      document.getElementById('krs-summary').innerText = `${selectedKrs.length} MK (${totalSks} SKS)`;
+
+      const btn = document.getElementById('btn-submit-krs');
+      btn.disabled = totalSks === 0 || totalSks > 24;
+    }
+
+    function toggleKrs(id) {
+      if (selectedKrs.includes(id)) {
+        selectedKrs = selectedKrs.filter(x => x !== id);
+      } else {
+        selectedKrs.push(id);
+      }
+      renderKrs();
+    }
+
+    async function submitKrs() {
+      const totalSks = MOCK_MATKUL.filter(mk => selectedKrs.includes(mk.id)).reduce((s, mk) => s + mk.sks, 0);
+      const selectedList = MOCK_MATKUL.filter(mk => selectedKrs.includes(mk.id)).map(mk => ({
+        kode: mk.kode,
+        nama: mk.nama,
+        kelas: mk.kelas,
+        sks: mk.sks
+      }));
+
+      const alertBox = document.getElementById('krs-alert');
+
+      // Simpan permanen ke Backend SQLite dengan Validasi Server-Side
+      try {
+        const res = await fetch('/api/krs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nim: "2112012014",
+            semesterAkademik: "2024/2025 Ganjil",
+            selectedIds: selectedKrs
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alertBox.className = "p-3 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 block";
+          alertBox.innerText = `Peringatan Sistem: ${data.error || 'Pengajuan KRS ditolak oleh server.'}`;
+          return;
+        }
+
+        // Sukses: update data di portal Dosen secara riil
+        const rian = MOCK_BIMBINGAN.find(m => m.nim === "2112012014");
+        if (rian) {
+          rian.status = "Menunggu Persetujuan";
+          rian.sksDiajukan = totalSks;
+          rian.matkul = selectedList;
+        }
+        updateMahasiswaKrsBanner("Menunggu Persetujuan", totalSks, "Menunggu review dan tanda tangan digital oleh Dosen Pembimbing Akademik.");
+        renderDosen();
+
+        alertBox.className = "p-3 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 block";
+        alertBox.innerText = `KRS (${totalSks} SKS) berhasil diajukan & divalidasi ke database SQLite! Masuk ke antrean DPA.`;
+        setTimeout(() => alertBox.classList.add('hidden'), 5000);
+
+      } catch (e) {
+        console.warn("Backend error:", e);
+        alertBox.className = "p-3 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 block";
+        alertBox.innerText = "Mode Offline: KRS tersimpan sementara di memori browser.";
+      }
+    }
+
+    // KHS Logics
+    function renderKhs() {
+      const semKey = document.getElementById('khs-sem-select').value;
+      const data = MOCK_KHS[semKey];
+
+      document.getElementById('khs-sks-sem').innerText = data.sksSem;
+      document.getElementById('khs-sks-kum').innerText = data.sksKum;
+      document.getElementById('khs-ips').innerText = data.ips.toFixed(2);
+      document.getElementById('khs-ipk').innerText = data.ipk.toFixed(2);
+      document.getElementById('khs-maks').innerText = `${data.maks} SKS`;
+
+      const tbody = document.getElementById('khs-table-body');
+      tbody.innerHTML = '';
+      data.list.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 text-center font-mono text-slate-500">${item.no}</td>
+          <td class="p-3 font-mono">${item.kode}</td>
+          <td class="p-3 font-medium">${item.nama}</td>
+          <td class="p-3 text-center font-mono">${item.sks}</td>
+          <td class="p-3 text-center font-mono font-bold">${item.nilai}</td>
+          <td class="p-3 text-center font-mono">${item.bobot.toFixed(1)}</td>
+          <td class="p-3 text-center font-mono">${item.total.toFixed(1)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Jadwal Logics
+    function filterJadwal(hari) {
+      document.querySelectorAll('.jadwal-tab-btn').forEach(b => {
+        b.className = "jadwal-tab-btn px-3 py-1.5 text-xs font-semibold rounded text-slate-600 hover:bg-slate-100";
+      });
+      document.getElementById(`day-${hari}`).className = "jadwal-tab-btn px-3 py-1.5 text-xs font-semibold rounded bg-slate-900 text-white";
+
+      const filtered = hari === "Semua" ? MOCK_JADWAL : MOCK_JADWAL.filter(j => j.hari === hari);
+      const tbody = document.getElementById('jadwal-table-body');
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">Tidak ada jadwal perkuliahan pada hari ${hari}.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(j => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 font-semibold">${j.hari}</td>
+          <td class="p-3 font-mono text-slate-600">${j.waktu}</td>
+          <td class="p-3 font-mono">${j.kode}</td>
+          <td class="p-3 font-medium">${j.nama}</td>
+          <td class="p-3 text-center font-mono">${j.kelas}</td>
+          <td class="p-3 text-center font-mono">${j.sks}</td>
+          <td class="p-3 text-slate-600">${j.ruang}</td>
+          <td class="p-3 text-slate-600">${j.dosen}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Portal Dosen Logics
+    function renderDosen() {
+      const tbody = document.getElementById('dosen-table-body');
+      tbody.innerHTML = '';
+      const pending = MOCK_BIMBINGAN.filter(m => m.status === "Menunggu Persetujuan").length;
+      document.getElementById('pending-count').innerText = `${pending} Mahasiswa`;
+
+      MOCK_BIMBINGAN.forEach(m => {
+        const tr = document.createElement('tr');
+        let badgeColor = "bg-slate-100 text-slate-700";
+        if (m.status === "Disetujui") badgeColor = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+        if (m.status === "Menunggu Persetujuan") badgeColor = "bg-amber-50 text-amber-700 border border-amber-200";
+        if (m.status === "Ditolak") badgeColor = "bg-rose-50 text-rose-700 border border-rose-200";
+
+        const isOverload = m.sksDiajukan > m.maksSks;
+
+        tr.innerHTML = `
+          <td class="p-3 font-mono">${m.nim}</td>
+          <td class="p-3 font-semibold">${m.nama}</td>
+          <td class="p-3 text-center font-mono">${m.ipk.toFixed(2)}</td>
+          <td class="p-3 text-center font-mono ${isOverload ? 'text-rose-600 font-bold' : ''}">
+            ${m.sksDiajukan} / ${m.maksSks}
+          </td>
+          <td class="p-3 text-center">
+            <span class="text-[11px] px-2 py-0.5 rounded font-semibold ${badgeColor}">${m.status}</span>
+          </td>
+          <td class="p-3 text-right">
+            <button onclick="openModal('${m.nim}')" ${m.status === 'Belum Mengisi' ? 'disabled' : ''} class="px-2.5 py-1 text-xs border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-40 min-h-[32px]">
+              Periksa
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openModal(nim) {
+      const mhs = MOCK_BIMBINGAN.find(m => m.nim === nim);
+      if (!mhs) return;
+      activeModalNim = nim;
+
+      document.getElementById('modal-mhs-info').innerText = `${mhs.nim} - ${mhs.nama} | IPK: ${mhs.ipk.toFixed(2)} | Beban: ${mhs.sksDiajukan}/${mhs.maksSks} SKS`;
+      const body = document.getElementById('modal-matkul-body');
+      body.innerHTML = '';
+
+      if (!mhs.matkul || mhs.matkul.length === 0) {
+        body.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400">Tidak ada daftar matkul</td></tr>`;
+      } else {
+        mhs.matkul.forEach(mk => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="p-2 font-mono">${mk.kode}</td>
+            <td class="p-2">${mk.nama}</td>
+            <td class="p-2 text-center font-mono">${mk.kelas}</td>
+            <td class="p-2 text-center font-mono">${mk.sks}</td>
+          `;
+          body.appendChild(row);
+        });
+      }
+
+      document.getElementById('modal-notes').value = "";
+      document.getElementById('review-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('review-modal').classList.add('hidden');
+      activeModalNim = null;
+    }
+
+    function updateMahasiswaKrsBanner(status, sks, note) {
+      const box = document.getElementById('mhs-krs-status-box');
+      const badge = document.getElementById('mhs-krs-badge');
+      const desc = document.getElementById('mhs-krs-desc');
+      const tag = document.getElementById('mhs-krs-sks-tag');
+
+      if (!box || !badge) return;
+
+      tag.innerText = `${sks} SKS Diajukan`;
+      badge.innerText = status;
+
+      if (status === "Disetujui") {
+        box.className = "bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-start gap-3";
+        badge.className = "bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-300";
+        desc.innerText = note ? `Disetujui DPA: "${note}". Rencana studi sah.` : "Rencana studi telah disetujui resmi oleh DPA. KRS telah terkunci dan sah untuk perkuliahan.";
+      } else if (status === "Ditolak") {
+        box.className = "bg-rose-50 border border-rose-200 rounded-lg p-4 flex items-start gap-3";
+        badge.className = "bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded border border-rose-300";
+        desc.innerText = note ? `Ditolak DPA: "${note}". Silakan lakukan revisi pemilihan mata kuliah.` : "KRS ditolak oleh DPA. Harap revisi beban SKS Anda.";
+      } else {
+        box.className = "bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3";
+        badge.className = "bg-amber-200/80 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded";
+        desc.innerText = note || "Menunggu review dan tanda tangan digital oleh Dosen Pembimbing Akademik.";
+      }
+      lucide.createIcons();
+    }
+
+    async function confirmAction(action) {
+      if (!activeModalNim) return;
+      const target = MOCK_BIMBINGAN.find(m => m.nim === activeModalNim);
+      const noteInput = document.getElementById('modal-notes').value.trim();
+
+      if (target) {
+        target.status = action === 'APPROVE' ? 'Disetujui' : 'Ditolak';
+
+        // Persist ke SQLite
+        try {
+          await fetch('/api/dosen/krs-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nim: activeModalNim,
+              action: action,
+              notes: noteInput
+            })
+          });
+        } catch (e) {
+          console.warn("Backend offline:", e);
+        }
+
+        // Sinkronisasi langsung ke Dashboard Mahasiswa jika Rian Hidayat
+        if (target.nim === "2112012014") {
+          updateMahasiswaKrsBanner(target.status, target.sksDiajukan, noteInput);
+        }
+      }
+      closeModal();
+      renderDosen();
+    }
+
+    // Transkrip Logics
+    const MOCK_TRANSKRIP = [
+      { kode: "IF1101", nama: "Dasar Pemrograman", sks: 4, nilai: "A", bobot: 4.0 },
+      { kode: "MA1101", nama: "Kalkulus I", sks: 3, nilai: "B", bobot: 3.0 },
+      { kode: "FI1101", nama: "Fisika Dasar", sks: 3, nilai: "AB", bobot: 3.5 },
+      { kode: "KU1001", nama: "Bahasa Indonesia", sks: 2, nilai: "A", bobot: 4.0 },
+      { kode: "IF1201", nama: "Algoritma Pemrograman", sks: 4, nilai: "A", bobot: 4.0 },
+      { kode: "MA1201", nama: "Aljabar Linear Matriks", sks: 3, nilai: "A", bobot: 4.0 },
+      { kode: "IF2101", nama: "Struktur Data & Algoritma", sks: 4, nilai: "AB", bobot: 3.5 },
+      { kode: "IF2102", nama: "Basis Data", sks: 3, nilai: "A", bobot: 4.0 },
+      { kode: "IF2201", nama: "Rekayasa Perangkat Lunak", sks: 3, nilai: "A", bobot: 4.0 },
+      { kode: "IF2204", nama: "Pemrograman Berorientasi Objek", sks: 4, nilai: "A", bobot: 4.0 },
+    ];
+
+    function renderTranskrip() {
+      const tbody = document.getElementById('transkrip-table-body');
+      tbody.innerHTML = '';
+      MOCK_TRANSKRIP.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 text-center font-mono text-slate-500">${idx + 1}</td>
+          <td class="p-3 font-mono">${item.kode}</td>
+          <td class="p-3 font-medium">${item.nama}</td>
+          <td class="p-3 text-center font-mono">${item.sks}</td>
+          <td class="p-3 text-center font-mono font-bold">${item.nilai}</td>
+          <td class="p-3 text-center font-mono">${item.bobot.toFixed(1)}</td>
+          <td class="p-3 text-center font-mono">${(item.sks * item.bobot).toFixed(1)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Input Nilai Dosen Logics
+    const MOCK_NILAI_MAHASISWA = [
+      { nim: "2112012014", nama: "Rian Hidayat", tugas: 85, uts: 88, uas: 90, presensi: 100 },
+      { nim: "2112012030", nama: "Fajar Nugraha", tugas: 60, uts: 65, uas: 55, presensi: 80 },
+      { nim: "2112012002", nama: "Siti Rahmawati", tugas: 95, uts: 92, uas: 96, presensi: 100 },
+      { nim: "2112012055", nama: "Dimas Anggara", tugas: 75, uts: 70, uas: 72, presensi: 90 },
+    ];
+
+    function hitungNilai(tugas, uts, uas, presensi) {
+      const skor = (tugas * 0.2) + (uts * 0.3) + (uas * 0.4) + (presensi * 0.1);
+      let grade = "E";
+      if (skor >= 85) grade = "A";
+      else if (skor >= 75) grade = "AB";
+      else if (skor >= 65) grade = "B";
+      else if (skor >= 55) grade = "BC";
+      else if (skor >= 45) grade = "C";
+      else if (skor >= 35) grade = "D";
+      return { skor: skor.toFixed(1), grade };
+    }
+
+    function renderInputNilai() {
+      const tbody = document.getElementById('input-nilai-table-body');
+      tbody.innerHTML = '';
+      MOCK_NILAI_MAHASISWA.forEach((m, idx) => {
+        const { skor, grade } = hitungNilai(m.tugas, m.uts, m.uas, m.presensi);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 font-mono">${m.nim}</td>
+          <td class="p-3 font-medium">${m.nama}</td>
+          <td class="p-2 text-center">
+            <input type="number" min="0" max="100" value="${m.tugas}" oninput="updateNilaiRow(${idx}, 'tugas', this.value)" class="w-16 border rounded p-1 text-center font-mono text-xs">
+          </td>
+          <td class="p-2 text-center">
+            <input type="number" min="0" max="100" value="${m.uts}" oninput="updateNilaiRow(${idx}, 'uts', this.value)" class="w-16 border rounded p-1 text-center font-mono text-xs">
+          </td>
+          <td class="p-2 text-center">
+            <input type="number" min="0" max="100" value="${m.uas}" oninput="updateNilaiRow(${idx}, 'uas', this.value)" class="w-16 border rounded p-1 text-center font-mono text-xs">
+          </td>
+          <td class="p-2 text-center">
+            <input type="number" min="0" max="100" value="${m.presensi}" oninput="updateNilaiRow(${idx}, 'presensi', this.value)" class="w-16 border rounded p-1 text-center font-mono text-xs">
+          </td>
+          <td id="skor-${idx}" class="p-3 text-center font-mono font-bold">${skor}</td>
+          <td id="grade-${idx}" class="p-3 text-center font-mono font-bold text-slate-800">${grade}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateNilaiRow(idx, field, val) {
+      MOCK_NILAI_MAHASISWA[idx][field] = Number(val) || 0;
+      const m = MOCK_NILAI_MAHASISWA[idx];
+      const { skor, grade } = hitungNilai(m.tugas, m.uts, m.uas, m.presensi);
+      document.getElementById(`skor-${idx}`).innerText = skor;
+      document.getElementById(`grade-${idx}`).innerText = grade;
+
+      // Sinkronisasi otomatis ke Transkrip & KHS Mahasiswa Rian Hidayat (NIM 2112012014)
+      if (m.nim === "2112012014") {
+        const transItem = MOCK_TRANSKRIP.find(t => t.kode === "IF2101");
+        if (transItem) {
+          transItem.nilai = grade;
+          let b = 0.0;
+          if (grade === "A") b = 4.0;
+          else if (grade === "AB") b = 3.5;
+          else if (grade === "B") b = 3.0;
+          else if (grade === "BC") b = 2.5;
+          else if (grade === "C") b = 2.0;
+          else if (grade === "D") b = 1.0;
+          transItem.bobot = b;
+          renderTranskrip();
+        }
+      }
+    }
+
+    async function saveNilaiDosen() {
+      // Simpan nilai mahasiswa satu per satu ke SQLite
+      try {
+        for (const m of MOCK_NILAI_MAHASISWA) {
+          await fetch('/api/nilai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nim: m.nim,
+              kodeMk: "IF2101",
+              tugas: m.tugas,
+              uts: m.uts,
+              uas: m.uas,
+              presensi: m.presensi
+            })
+          });
+        }
+      } catch (err) {
+        console.warn("Gagal sinkronisasi nilai ke SQLite:", err);
+      }
+
+      const alertBox = document.getElementById('nilai-saved-alert');
+      alertBox.innerText = "Perubahan nilai berhasil disimpan & diperbarui secara permanen di database SQLite!";
+      alertBox.classList.remove('hidden');
+      setTimeout(() => alertBox.classList.add('hidden'), 4000);
+    }
+
+    // Presensi Perkuliahan Dosen Logics
+    const MOCK_PRESENSI_MAHASISWA = [
+      { no: 1, nim: "2112012014", nama: "Rian Hidayat", status: "Hadir", jam: "08:05 WIB", hadirTotal: "9/9 (100%)" },
+      { no: 2, nim: "2112012002", nama: "Siti Rahmawati", status: "Hadir", jam: "08:02 WIB", hadirTotal: "9/9 (100%)" },
+      { no: 3, nim: "2112012030", nama: "Fajar Nugraha", status: "Izin", jam: "-", hadirTotal: "7/9 (77.8%)" },
+      { no: 4, nim: "2112012055", nama: "Dimas Anggara", status: "Alpa", jam: "-", hadirTotal: "6/9 (66.7%)" },
+    ];
+
+    function renderPresensi() {
+      const tbody = document.getElementById('presensi-table-body');
+      tbody.innerHTML = '';
+      MOCK_PRESENSI_MAHASISWA.forEach(m => {
+        let badgeStyle = "bg-slate-100 text-slate-700";
+        if (m.status === "Hadir") badgeStyle = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+        if (m.status === "Izin") badgeStyle = "bg-amber-50 text-amber-700 border border-amber-200";
+        if (m.status === "Alpa") badgeStyle = "bg-rose-50 text-rose-700 border border-rose-200";
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 text-center font-mono text-slate-500">${m.no}</td>
+          <td class="p-3 font-mono">${m.nim}</td>
+          <td class="p-3 font-medium">${m.nama}</td>
+          <td class="p-3 text-center">
+            <span class="text-[11px] px-2 py-0.5 rounded font-semibold ${badgeStyle}">${m.status}</span>
+          </td>
+          <td class="p-3 text-center font-mono text-slate-600">${m.jam}</td>
+          <td class="p-3 text-center font-mono ${m.hadirTotal.includes('66') ? 'text-rose-600 font-bold' : ''}">${m.hadirTotal}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    let CURRENT_PRESENSI_TOKEN = "BST-8921";
+
+    async function generateOtpPresensi() {
+      try {
+        const res = await fetch('/api/presensi/generate', { method: 'POST' });
+        const data = await res.json();
+        if (data.token) {
+          CURRENT_PRESENSI_TOKEN = data.token;
+          document.getElementById('presensi-otp-display').innerText = data.token;
+          return;
+        }
+      } catch (e) {
+        console.warn("Backend offline presensi OTP:", e);
+      }
+
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let code = "BST-";
+      for (let i = 0; i < 4; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      CURRENT_PRESENSI_TOKEN = code;
+      document.getElementById('presensi-otp-display').innerText = code;
+    }
+
+    function simpanPresensi() {
+      const alertBox = document.getElementById('presensi-alert');
+      alertBox.classList.remove('hidden');
+      setTimeout(() => alertBox.classList.add('hidden'), 4000);
+    }
+
+    // Bimbingan Skripsi Logics
+    const MOCK_BIMBINGAN_TA = [
+      {
+        nim: "2012011005",
+        nama: "Andi Saputra",
+        judul: "Rancang Bangun Sistem Deteksi Kerentanan Web Berbasis Graf Pengetahuan",
+        tahap: "Sidang Skripsi",
+        log: "14 Kali Bimbingan",
+        status: "Siap Sidang"
+      },
+      {
+        nim: "2012011019",
+        nama: "Nadia Utami",
+        judul: "Optimasi Query Database Terdistribusi Menggunakan Metode Sharding Dinamis",
+        tahap: "Penelitian (Bab IV)",
+        log: "9 Kali Bimbingan",
+        status: "Proses Revisi"
+      },
+      {
+        nim: "2112012008",
+        nama: "Gilang Permana",
+        judul: "Implementasi Zero-Trust Architecture pada Portal Layanan Kampus",
+        tahap: "Seminar Proposal",
+        log: "6 Kali Bimbingan",
+        status: "Siap Sempro"
+      },
+      {
+        nim: "2112012042",
+        nama: "Tiara Anindya",
+        judul: "Analisis Sentimen Evaluasi Dosen oleh Mahasiswa Menggunakan LLM",
+        tahap: "Penyusunan Bab I-III",
+        log: "3 Kali Bimbingan",
+        status: "Bimbingan Awal"
+      }
+    ];
+
+    function renderBimbinganTa() {
+      const tbody = document.getElementById('bimbingan-ta-table-body');
+      tbody.innerHTML = '';
+      MOCK_BIMBINGAN_TA.forEach(m => {
+        let badgeStyle = "bg-slate-100 text-slate-700";
+        if (m.tahap.includes("Sidang")) badgeStyle = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+        if (m.tahap.includes("Seminar")) badgeStyle = "bg-blue-50 text-blue-700 border border-blue-200";
+        if (m.tahap.includes("Penelitian")) badgeStyle = "bg-amber-50 text-amber-700 border border-amber-200";
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 font-mono">${m.nim}</td>
+          <td class="p-3 font-semibold">${m.nama}</td>
+          <td class="p-3 text-slate-700 leading-snug">${m.judul}</td>
+          <td class="p-3 text-center">
+            <span class="text-[11px] px-2 py-0.5 rounded font-semibold ${badgeStyle}">${m.tahap}</span>
+          </td>
+          <td class="p-3 text-center font-mono text-slate-500">${m.log}</td>
+          <td class="p-3 text-right">
+            <button onclick="alert('Membuka logbook & draft skripsi mahasiswa NIM ' + '${m.nim}')" class="px-2.5 py-1 text-xs border border-slate-300 rounded hover:bg-slate-50 font-medium min-h-[32px]">
+              Tinjau Draft
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Presensi Mahasiswa Logics
+    const MOCK_MHS_PRESENSI = [
+      { kode: "IF2101", nama: "Struktur Data & Algoritma", sesi: 9, hadir: 9, izin: 0, alpa: 0 },
+      { kode: "IF2102", nama: "Basis Data Lanjut", sesi: 8, hadir: 8, izin: 0, alpa: 0 },
+      { kode: "IF2103", nama: "Pemrograman Web Komponen", sesi: 9, hadir: 8, izin: 1, alpa: 0 },
+      { kode: "KU2001", nama: "Kewarganegaraan", sesi: 8, hadir: 7, izin: 0, alpa: 1 },
+      { kode: "IF2104", nama: "Jaringan Komputer", sesi: 9, hadir: 9, izin: 0, alpa: 0 },
+    ];
+
+    function renderMhsPresensi() {
+      const tbody = document.getElementById('mhs-presensi-table-body');
+      tbody.innerHTML = '';
+      MOCK_MHS_PRESENSI.forEach(item => {
+        const pct = Math.round((item.hadir / item.sesi) * 100);
+        const isSafe = pct >= 75;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 font-mono">${item.kode}</td>
+          <td class="p-3 font-medium">${item.nama}</td>
+          <td class="p-3 text-center font-mono">${item.sesi}</td>
+          <td class="p-3 text-center font-mono font-bold text-emerald-700">${item.hadir}</td>
+          <td class="p-3 text-center font-mono text-amber-700">${item.izin}</td>
+          <td class="p-3 text-center font-mono text-rose-700">${item.alpa}</td>
+          <td class="p-3 text-center font-mono">
+            <div class="flex items-center gap-2 justify-center">
+              <span class="font-bold">${pct}%</span>
+              <div class="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full ${isSafe ? 'bg-emerald-500' : 'bg-rose-500'}" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          </td>
+          <td class="p-3 text-center">
+            <span class="text-[11px] px-2 py-0.5 rounded font-semibold ${isSafe ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
+              ${isSafe ? 'Memenuhi' : 'Peringatan'}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function submitTokenMhs() {
+      const val = document.getElementById('input-token-mhs').value.trim().toUpperCase();
+      const fb = document.getElementById('mhs-presensi-feedback');
+      fb.classList.remove('hidden', 'bg-rose-50', 'text-rose-700', 'border-rose-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+
+      if (!val) {
+        fb.classList.add('bg-rose-50', 'text-rose-700', 'border', 'border-rose-200');
+        fb.innerText = "Masukkan token presensi terlebih dahulu.";
+        return;
+      }
+
+      // Validasi langsung ke backend SQLite
+      try {
+        const res = await fetch('/api/presensi/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nim: "2112012014",
+            token: val
+          })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          fb.classList.add('bg-rose-50', 'text-rose-700', 'border', 'border-rose-200');
+          fb.innerText = data.error || `Token [${val}] tidak valid atau sesi berakhir.`;
+          return;
+        }
+
+        fb.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-200');
+        fb.innerText = `Presensi terverifikasi & tersimpan permanen di database! Token [${val}] sah.`;
+        document.getElementById('input-token-mhs').value = "";
+
+        const rianPresensi = MOCK_PRESENSI_MAHASISWA.find(m => m.nim === "2112012014");
+        if (rianPresensi) {
+          rianPresensi.status = "Hadir";
+          rianPresensi.jam = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + " WIB";
+        }
+        renderPresensi();
+      } catch (err) {
+        console.warn("Backend presensi submit error:", err);
+      }
+    }
+
+    // Mahasiswa Logbook Bimbingan Skripsi
+    let MOCK_MHS_LOGBOOK = [
+      { no: 1, date: "18 Okt 2024", chapter: "Bab III - Analisis Kebutuhan Sistem & Arsitektur Micro-Frontend", notes: "Perjelas diagram konteks dan tambahkan tabel perbandingan state management.", status: "ACC Dosen" },
+      { no: 2, date: "10 Okt 2024", chapter: "Bab II - Studi Literatur Zero-Trust & Komponen SSR", notes: "Perbarui referensi jurnal terindeks Scopus minimal tahun 2022.", status: "ACC Dosen" },
+      { no: 3, date: "28 Sep 2024", chapter: "Bab I - Latar Belakang & Rumusan Masalah", notes: "Latar belakang masalah sudah kuat, lanjutkan ke tinjauan pustaka.", status: "ACC Dosen" },
+    ];
+
+    function renderMhsLogbook() {
+      const tbody = document.getElementById('mhs-logbook-table-body');
+      tbody.innerHTML = '';
+      MOCK_MHS_LOGBOOK.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 text-center font-mono text-slate-500">${idx + 1}</td>
+          <td class="p-3 font-mono text-slate-600">${item.date}</td>
+          <td class="p-3 font-semibold text-slate-800">${item.chapter}</td>
+          <td class="p-3 text-slate-600 leading-snug">${item.notes}</td>
+          <td class="p-3 text-center">
+            <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] px-2 py-0.5 rounded font-semibold">
+              ${item.status}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function addLogbookMhs() {
+      const date = document.getElementById('log-date').value;
+      const ch = document.getElementById('log-chapter').value.trim();
+      const notes = document.getElementById('log-notes').value.trim();
+
+      if (!ch) {
+        alert("Harap isi bab/topik yang dikonsultasikan.");
+        return;
+      }
+
+      // Simpan ke SQLite
+      try {
+        await fetch('/api/logbook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nim: "2112012014",
+            tanggal: date || new Date().toISOString().split('T')[0],
+            bab: ch,
+            catatan: notes || "Menunggu review dosen pembimbing"
+          })
+        });
+      } catch (err) {
+        console.warn("Backend logbook error:", err);
+      }
+
+      MOCK_MHS_LOGBOOK.unshift({
+        no: MOCK_MHS_LOGBOOK.length + 1,
+        date: date,
+        chapter: ch,
+        notes: notes || "Menunggu verifikasi catatan oleh pembimbing.",
+        status: "Menunggu Review"
+      });
+
+      // Sinkronkan ke antrean bimbingan skripsi Dosen
+      const rianTa = MOCK_BIMBINGAN_TA.find(b => b.nim === "2112012014");
+      if (rianTa) {
+        rianTa.log = `${MOCK_MHS_LOGBOOK.length} Kali Bimbingan`;
+      } else {
+        MOCK_BIMBINGAN_TA.unshift({
+          nim: "2112012014",
+          nama: "Rian Hidayat",
+          judul: "Rancang Bangun Sistem Informasi Akademik Terdistribusi Berbasis Micro-Frontend",
+          tahap: "Seminar Proposal",
+          log: `${MOCK_MHS_LOGBOOK.length} Kali Bimbingan`,
+          status: "Menunggu Review"
+        });
+      }
+
+      document.getElementById('log-chapter').value = "";
+      document.getElementById('log-notes').value = "";
+      renderMhsLogbook();
+      renderBimbinganTa();
+      alert("Catatan bimbingan berhasil diajukan dan langsung tercatat permanen di database!");
+    }
+
+    // Init Data Sinkronisasi dari SQLite Backend
+    async function initApp() {
+      try {
+        // 1. Ambil setting sistem (Gerbang KRS)
+        const resSettings = await fetch('/api/settings');
+        if (resSettings.ok) {
+          const settings = await resSettings.json();
+          IS_KRS_GATE_OPEN = settings.krs_gate_open === '1';
+          const gateText = document.getElementById('baak-gate-status-text');
+          const badgeGate = document.getElementById('badge-gate-krs');
+          const btnSubmitKrs = document.getElementById('btn-submit-krs');
+
+          if (!IS_KRS_GATE_OPEN) {
+            if (gateText) {
+              gateText.innerText = "DITUTUP";
+              gateText.className = "text-2xl font-bold font-mono text-rose-700";
+            }
+            if (badgeGate) {
+              badgeGate.innerText = "DITUTUP";
+              badgeGate.className = "bg-rose-50 text-rose-700 border border-rose-200 text-xs px-2.5 py-1 rounded font-bold";
+            }
+            if (btnSubmitKrs) btnSubmitKrs.disabled = true;
+          }
+        }
+
+        // 2. Ambil katalog mata kuliah dari SQLite
+        const resMatkul = await fetch('/api/matakuliah');
+        if (resMatkul.ok) {
+          const listMatkul = await resMatkul.json();
+          if (listMatkul.length > 0) {
+            MOCK_MATKUL.length = 0;
+            listMatkul.forEach(m => MOCK_MATKUL.push(m));
+          }
+        }
+
+        // 3. Ambil data bimbingan DPA dari SQLite
+        const resBimbingan = await fetch('/api/dosen/bimbingan');
+        if (resBimbingan.ok) {
+          const listBimbingan = await resBimbingan.json();
+          if (listBimbingan.length > 0) {
+            MOCK_BIMBINGAN = listBimbingan;
+          }
+        }
+
+        // 4. Ambil token presensi aktif
+        const resPresensi = await fetch('/api/presensi/active');
+        if (resPresensi.ok) {
+          const sesi = await resPresensi.json();
+          if (sesi && sesi.token) {
+            CURRENT_PRESENSI_TOKEN = sesi.token;
+            const display = document.getElementById('presensi-otp-display');
+            if (display) display.innerText = sesi.token;
+          }
+        }
+
+        // 5. Ambil status KRS Rian Hidayat
+        const resKrsRian = await fetch('/api/krs/2112012014');
+        if (resKrsRian.ok) {
+          const krsData = await resKrsRian.json();
+          if (krsData && krsData.status && krsData.status !== 'Belum Mengisi') {
+            const sksTotal = krsData.matkul ? krsData.matkul.reduce((s, m) => s + m.sks, 0) : 12;
+            updateMahasiswaKrsBanner(krsData.status, sksTotal, krsData.catatan_dpa);
+          }
+        }
+      } catch (err) {
+        console.warn("Sinkronisasi inisialisasi offline fallback:", err);
+      }
+
+      renderKrs();
+      renderKhs();
+      filterJadwal('Semua');
+      renderTranskrip();
+      renderMhsPresensi();
+      renderMhsLogbook();
+      renderInputNilai();
+      renderPresensi();
+      renderBimbinganTa();
+      renderDosen();
+      lucide.createIcons();
+    }
+
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+siakad.db*
+*.db
+*.db-shm
+*.db-wal
+.env
+*.log

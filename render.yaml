@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: siakad-enterprise
+    runtime: node
+    plan: starter # Persistent Disk butuh minimum instance Starter ($7/mo) di Render
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: siakad-storage
+      mountPath: /var/data
+      sizeGB: 1
